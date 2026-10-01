@@ -1,0 +1,14 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Story from '../../../components/story/Story.astro';
+import Replay from '../../../components/aiops/Replay.astro';
+import { stories } from '../../../data/stories';
+
+const m = stories.aiops.fr.meta;
+---
+
+<Base lang="fr" title={m.title} description={m.description} path="/fr/work/aiops/" altPath="/work/aiops/" og="/og/aiops-fr.png">
+  <Story lang="fr" slug="aiops">
+    <Replay lang="fr" />
+  </Story>
+</Base>

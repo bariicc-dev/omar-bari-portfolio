@@ -1,0 +1,97 @@
+---
+import Nb from './Nb.astro';
+import { ui, type Lang } from '../data/ui';
+import { EMAIL, LINKEDIN, GITHUB, CV_PATH } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang].contact;
+const mailto = `mailto:${EMAIL}?subject=${encodeURIComponent(t.subject)}`;
+---
+
+<section class="contact" id="contact" aria-labelledby="contact-title">
+  <div class="container">
+    <div class="contact-box">
+      <h2 id="contact-title" class="h2 contact-title"><Nb text={t.title} /></h2>
+      <p class="lede contact-line"><Nb text={t.line} /></p>
+      <div class="contact-actions">
+        <a class="btn btn--accent contact-mail" href={mailto}>
+          <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="2.5" y="4.5" width="15" height="11" rx="2" stroke="currentColor" stroke-width="1.6"></rect>
+            <path d="m3.5 6 6.5 5 6.5-5" stroke="currentColor" stroke-width="1.6"></path>
+          </svg>
+          {EMAIL}
+        </a>
+        <button type="button" class="btn btn--ghost needs-js" data-copy={EMAIL} data-done={t.copied}>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="5" y="5" width="9" height="9" rx="2" stroke="currentColor" stroke-width="1.4"></rect>
+            <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" stroke="currentColor" stroke-width="1.4"></path>
+          </svg>
+          <span data-copy-label>{t.copy}</span>
+        </button>
+      </div>
+      <ul class="contact-links">
+        <li><a href={LINKEDIN} target="_blank" rel="noopener">{t.linkedin} <span aria-hidden="true">↗</span></a></li>
+        <li><a href={GITHUB} target="_blank" rel="noopener">{t.github} <span aria-hidden="true">↗</span></a></li>
+        <li><a href={CV_PATH} download>{t.cv} <span aria-hidden="true">↓</span></a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .contact {
+    padding-block: clamp(3.5rem, 7vw, 5.5rem) clamp(4rem, 8vw, 6rem);
+  }
+  .contact-box {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1.8rem, 5vw, 3.6rem);
+    border: 1px solid var(--line-2);
+    border-radius: 24px;
+    background:
+      radial-gradient(700px 300px at 100% 0%, rgba(200, 242, 80, 0.09), transparent 70%),
+      linear-gradient(180deg, var(--surface-2), var(--surface));
+  }
+  .contact-title {
+    max-width: 18em;
+  }
+  .contact-line {
+    margin-top: 1rem;
+    max-width: 38em;
+  }
+  .contact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 2rem;
+  }
+  .contact-mail {
+    min-height: 3.25rem;
+    padding-inline: 1.3rem;
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+  }
+  .contact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1.6rem;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .contact-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 2.75rem;
+    font-weight: 560;
+    color: var(--text-2);
+    text-decoration: none;
+  }
+  .contact-links a:hover {
+    color: var(--accent);
+  }
+</style>

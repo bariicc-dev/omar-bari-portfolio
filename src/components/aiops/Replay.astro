@@ -1,0 +1,661 @@
+---
+import { aiopsSim, LATENCY, SCORE, THRESHOLD, FOCUS, START_MINUTE, phaseAt } from '../../data/aiopsSim';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = aiopsSim[lang];
+const u = s.ui;
+
+// chart geometry (viewBox units)
+const W = 640;
+const H = 240;
+const L = 10;
+const R = 10;
+const T = 24;
+const B = 30;
+const N = LATENCY.length;
+const MAX = 1000;
+const x = (i: number) => L + (i * (W - L - R)) / (N - 1);
+const y = (v: number) => T + (1 - v / MAX) * (H - T - B);
+const path = LATENCY.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+const yTicks = [0, 250, 500, 750, 1000];
+const xTicks = [0, 10, 20, 30];
+const time = (i: number) => {
+  const m = START_MINUTE + i;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+};
+const nf = new Intl.NumberFormat(lang === 'fr' ? 'fr-FR' : 'en-US');
+const dec = (v: number) => nf.format(v);
+const flagged = SCORE.map((sc, i) => (sc >= THRESHOLD ? i : -1)).filter((i) => i >= 0);
+const firstFlag = flagged[0];
+const phase = phaseAt(FOCUS);
+const summary =
+  lang === 'fr'
+    ? `Graphique de la latence p95 de ${time(0)} à ${time(N - 1)}. Autour de 190 ms, pic à 910 ms à ${time(24)}, signalé de ${time(23)} à ${time(26)}, retour sous 250 ms vers ${time(29)}.`
+    : `Line chart of p95 latency from ${time(0)} to ${time(N - 1)}. Around 190 ms, peaking at 910 ms at ${time(24)}, flagged from ${time(23)} to ${time(26)}, back under 250 ms by ${time(29)}.`;
+const valueText = (i: number) => `${time(i)} · ${dec(LATENCY[i])} ms · ${u.tooltipScore} ${dec(SCORE[i])}`;
+const data = JSON.stringify({
+  latency: LATENCY,
+  score: SCORE,
+  threshold: THRESHOLD,
+  focus: FOCUS,
+  start: START_MINUTE,
+  stages: s.stages,
+  scoreLabel: u.tooltipScore,
+  again: u.replayAgain,
+  lang,
+});
+---
+
+<div class="replay" data-replay>
+  <div class="rp-top">
+    <p class="rp-id"><span class="rp-led" aria-hidden="true"></span>AIOps</p>
+    <p class="rp-sim">{u.sim}</p>
+  </div>
+
+  <div class="rp-body">
+    <figure class="rp-figure">
+      <div class="rp-head">
+        <figcaption class="rp-title">{u.chartTitle}</figcaption>
+        <p class="rp-readout needs-js" aria-hidden="true">
+          <b data-tip-v>{dec(LATENCY[FOCUS])} ms</b>
+          <span data-tip-t>{time(FOCUS)} · {u.tooltipScore} {dec(SCORE[FOCUS])}</span>
+        </p>
+      </div>
+      <div class="rp-plot">
+        <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={summary} class="rp-svg" data-geo={JSON.stringify({ W, H, L, R, T, B, N, MAX })}>
+          <defs>
+            <clipPath id="rp-played">
+              <rect x="0" y="0" height={H} width={x(FOCUS) + 1} data-clip></rect>
+            </clipPath>
+          </defs>
+          {
+            yTicks.map((v) => (
+              <g>
+                <line x1={L} x2={W - R} y1={y(v)} y2={y(v)} class="grid" />
+                <text x={L} y={y(v) - 5} class="tick">
+                  {dec(v)}
+                </text>
+              </g>
+            ))
+          }
+          {
+            xTicks.map((i) => (
+              <text x={x(i)} y={H - 8} class="tick" text-anchor={i === 0 ? 'start' : 'middle'}>
+                {time(i)}
+              </text>
+            ))
+          }
+          <path d={path} class="line line--future" />
+          <path d={path} class="line" clip-path="url(#rp-played)" />
+          {
+            flagged.map((i) => (
+              <circle cx={x(i)} cy={y(LATENCY[i])} r="5" class="flag" data-i={i} data-shown={i <= FOCUS ? 'true' : 'false'} />
+            ))
+          }
+          <g class="flag-label" data-shown={firstFlag <= FOCUS ? 'true' : 'false'} data-i={firstFlag}>
+            <line x1={x(firstFlag)} x2={x(firstFlag) - 34} y1={y(LATENCY[firstFlag]) - 8} y2={y(LATENCY[firstFlag]) - 30} />
+            <text x={x(firstFlag) - 38} y={y(LATENCY[firstFlag]) - 34} text-anchor="end">
+              {u.flagged} · {u.threshold}
+            </text>
+          </g>
+          <line class="cursor" x1={x(FOCUS)} x2={x(FOCUS)} y1={T} y2={H - B} data-cursor />
+          <circle class="cursor-dot" cx={x(FOCUS)} cy={y(LATENCY[FOCUS])} r="5" data-dot />
+        </svg>
+      </div>
+      <label class="rp-slider needs-js">
+        <span class="sr">{u.slider}</span>
+        <input type="range" min="0" max={N - 1} step="1" value={FOCUS} aria-valuetext={valueText(FOCUS)} data-slider />
+      </label>
+      <div class="rp-controls needs-js">
+        <button type="button" class="rbtn rbtn--go" data-rp="play">{u.replay}</button>
+        <button type="button" class="rbtn" data-rp="jump">{u.jump}</button>
+      </div>
+    </figure>
+
+    <ol class="rp-stages" data-stages>
+      {
+        s.stages.map((st, i) => {
+          const cur = st.byPhase[phase];
+          return (
+            <li class="rp-stage" data-led={cur.led}>
+              <span class="rp-dot" aria-hidden="true" />
+              <span class="rp-name">{st.name}</span>
+              <span class="rp-text" data-stage-text={i}>
+                {cur.text}
+              </span>
+            </li>
+          );
+        })
+      }
+      <li class="rp-sources" data-sources data-shown={phase === 'explained' || phase === 'recovering' ? 'true' : 'false'}>
+        <span class="kicker">{u.retrievedLabel}</span>
+        <ul>
+          {s.sources.map((src) => <li>{src}</li>)}
+        </ul>
+        <span class="rp-dropped">{u.dropped}</span>
+      </li>
+    </ol>
+  </div>
+
+  <details class="rp-data">
+    <summary>{u.tableSummary}</summary>
+    <div class="rp-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            {u.tableCols.map((c) => <th scope="col">{c}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {
+            LATENCY.map((v, i) => (
+              <tr class:list={{ hot: SCORE[i] >= THRESHOLD }}>
+                <td>{time(i)}</td>
+                <td>{dec(v)}</td>
+                <td>{dec(SCORE[i])}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </details>
+  <p class="rp-note">{u.note}</p>
+  <script type="application/json" data-rp-data set:html={data} />
+</div>
+
+<style>
+  .replay {
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    border: 1px solid var(--line-2);
+    border-radius: 22px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  }
+  .rp-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1rem;
+    padding-bottom: 1rem;
+  }
+  .rp-id {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-weight: 650;
+    font-stretch: 108%;
+  }
+  .rp-led {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--stop);
+    box-shadow: 0 0 0 4px var(--stop-soft);
+  }
+  .rp-sim {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 580;
+    color: var(--text-2);
+  }
+  .rp-sim::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ask);
+  }
+  .rp-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    gap: clamp(1rem, 2.4vw, 2rem);
+    align-items: start;
+  }
+  .rp-figure {
+    margin: 0;
+    padding: 1rem 1rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--bg-2);
+  }
+  .rp-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.3rem 1rem;
+  }
+  .rp-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+  .rp-readout {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .rp-readout b {
+    font-size: 1.15rem;
+    font-weight: 660;
+  }
+  .rp-readout span {
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.74rem;
+    color: var(--text-2);
+  }
+  .rp-plot {
+    position: relative;
+    margin-top: 0.4rem;
+  }
+  .rp-svg {
+    width: 100%;
+    height: auto;
+    touch-action: pan-y;
+    cursor: crosshair;
+  }
+  .grid,
+  .line,
+  .cursor,
+  .flag,
+  .cursor-dot,
+  .flag-label line {
+    vector-effect: non-scaling-stroke;
+  }
+  .grid {
+    stroke: rgba(163, 184, 228, 0.1);
+    stroke-width: 1;
+  }
+  .tick,
+  .flag-label text {
+    paint-order: stroke;
+    stroke: var(--bg-2);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+  .tick {
+    fill: var(--text-3);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .line {
+    fill: none;
+    stroke: #e3e9f5;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .line--future {
+    stroke: rgba(163, 184, 228, 0.24);
+  }
+  .flag {
+    fill: var(--stop);
+    stroke: var(--bg-2);
+    stroke-width: 2;
+    transition: opacity 0.2s ease;
+  }
+  .flag[data-shown='false'],
+  .flag-label[data-shown='false'] {
+    opacity: 0;
+  }
+  .flag-label line {
+    stroke: var(--text-3);
+    stroke-width: 1;
+  }
+  .flag-label text {
+    fill: var(--stop);
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .cursor {
+    stroke: var(--text-2);
+    stroke-width: 1;
+  }
+  .cursor-dot {
+    fill: var(--text);
+    stroke: var(--bg-2);
+    stroke-width: 2;
+  }
+  .rp-slider {
+    display: block;
+    margin-top: 0.4rem;
+  }
+  .rp-slider input {
+    width: 100%;
+    min-height: 2rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .rp-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  .rbtn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 0.93rem;
+    font-weight: 620;
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease;
+  }
+  .rbtn:hover {
+    border-color: var(--line-3);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .rbtn--go {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .rbtn--go:hover {
+    background: var(--accent-hi);
+  }
+
+  .rp-stages {
+    display: grid;
+    gap: 0.2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rp-stage {
+    display: grid;
+    grid-template-columns: 0.9rem minmax(0, 1fr);
+    column-gap: 0.75rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .rp-dot {
+    grid-row: 1 / 3;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-top: 0.3rem;
+    border-radius: 50%;
+    background: var(--line-3);
+    transition:
+      background 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  .rp-stage[data-led='ok'] .rp-dot {
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .rp-stage[data-led='warn'] .rp-dot {
+    background: var(--stop);
+    box-shadow: 0 0 0 4px var(--stop-soft);
+  }
+  .rp-stage[data-led='info'] .rp-dot {
+    background: var(--info);
+  }
+  .rp-name {
+    font-size: 0.82rem;
+    font-weight: 640;
+    letter-spacing: 0.01em;
+    color: var(--text-2);
+  }
+  .rp-text {
+    margin-top: 0.2rem;
+    font-size: 0.97rem;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
+  .rp-stage[data-led='idle'] .rp-text {
+    color: var(--text-3);
+  }
+  .rp-sources {
+    display: grid;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    padding: 0.85rem 0.95rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg-2);
+    transition: opacity 0.25s ease;
+  }
+  .rp-sources[data-shown='false'] {
+    opacity: 0.3;
+  }
+  .rp-sources .kicker {
+    font-size: 0.82rem;
+    font-weight: 640;
+    color: var(--text-2);
+  }
+  .rp-sources ul {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .rp-sources li {
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.76rem;
+    color: var(--accent);
+  }
+  .rp-dropped {
+    font-size: 0.82rem;
+    color: var(--text-2);
+  }
+  .rp-data {
+    margin-top: 1rem;
+  }
+  .rp-data summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    list-style: none;
+  }
+  .rp-data summary::-webkit-details-marker {
+    display: none;
+  }
+  .rp-data summary::before {
+    content: '+';
+    display: inline-grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border: 1px solid var(--line-2);
+    border-radius: 50%;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
+  .rp-data[open] summary::before {
+    content: '\2212';
+  }
+  .rp-table-wrap {
+    max-height: 16rem;
+    overflow: auto;
+    margin-top: 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg-2);
+  }
+  .rp-data table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .rp-data th,
+  .rp-data td {
+    padding: 0.4rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+  }
+  .rp-data th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-2);
+    font-weight: 400;
+    color: var(--text-3);
+  }
+  .rp-data tr.hot td {
+    color: var(--stop);
+    font-weight: 600;
+  }
+  .rp-note {
+    margin-top: 0.8rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-2);
+  }
+  @media (max-width: 899px) {
+    .rp-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  /* the chart scales down with the phone; keep labels and markers readable */
+  @media (max-width: 600px) {
+    .tick,
+    .flag-label text {
+      font-size: 22px;
+    }
+    .flag,
+    .cursor-dot {
+      r: 11px;
+    }
+  }
+</style>
+
+<script>
+  interface StageCopy {
+    name: string;
+    byPhase: Record<string, { led: string; text: string }>;
+  }
+  interface ReplayData {
+    latency: number[];
+    score: number[];
+    threshold: number;
+    focus: number;
+    start: number;
+    stages: StageCopy[];
+    scoreLabel: string;
+    again: string;
+    lang: string;
+  }
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('[data-replay]').forEach((root) => {
+    const raw = root.querySelector('[data-rp-data]')?.textContent;
+    const svg = root.querySelector<SVGSVGElement>('.rp-svg');
+    const slider = root.querySelector<HTMLInputElement>('[data-slider]');
+    if (!raw || !svg || !slider) return;
+    const d: ReplayData = JSON.parse(raw);
+    const g = JSON.parse(svg.dataset.geo ?? '{}');
+    const nf = new Intl.NumberFormat(d.lang === 'fr' ? 'fr-FR' : 'en-US');
+    const x = (i: number) => g.L + (i * (g.W - g.L - g.R)) / (g.N - 1);
+    const y = (v: number) => g.T + (1 - v / g.MAX) * (g.H - g.T - g.B);
+    const time = (i: number) => {
+      const m = d.start + i;
+      return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+    };
+    const phaseAt = (i: number) =>
+      i < 22 ? 'normal' : i === 22 ? 'rising' : i === 23 ? 'flagged' : i <= 27 ? 'explained' : 'recovering';
+
+    const clip = root.querySelector<SVGRectElement>('[data-clip]');
+    const cursor = root.querySelector<SVGLineElement>('[data-cursor]');
+    const dot = root.querySelector<SVGCircleElement>('[data-dot]');
+    const flags = [...root.querySelectorAll<SVGCircleElement>('.flag')];
+    const flagLabel = root.querySelector<SVGGElement>('.flag-label');
+    const tipV = root.querySelector<HTMLElement>('[data-tip-v]');
+    const tipT = root.querySelector<HTMLElement>('[data-tip-t]');
+    const stageEls = [...root.querySelectorAll<HTMLElement>('.rp-stage')];
+    const sources = root.querySelector<HTMLElement>('[data-sources]');
+    let timer = 0;
+
+    const render = (i: number) => {
+      const cx = x(i);
+      clip?.setAttribute('width', String(cx + 1));
+      cursor?.setAttribute('x1', String(cx));
+      cursor?.setAttribute('x2', String(cx));
+      dot?.setAttribute('cx', String(cx));
+      dot?.setAttribute('cy', String(y(d.latency[i])));
+      flags.forEach((f) => (f.dataset.shown = String(Number(f.dataset.i) <= i)));
+      if (flagLabel) flagLabel.dataset.shown = String(Number(flagLabel.dataset.i) <= i);
+      if (tipV && tipT) {
+        tipV.textContent = `${nf.format(d.latency[i])} ms`;
+        tipT.textContent = `${time(i)} · ${d.scoreLabel} ${nf.format(d.score[i])}`;
+      }
+      const phase = phaseAt(i);
+      stageEls.forEach((el, k) => {
+        const cur = d.stages[k].byPhase[phase];
+        el.dataset.led = cur.led;
+        const t = el.querySelector('[data-stage-text]');
+        if (t) t.textContent = cur.text;
+      });
+      if (sources) sources.dataset.shown = String(phase === 'explained' || phase === 'recovering');
+      slider.value = String(i);
+      slider.setAttribute('aria-valuetext', `${time(i)} · ${nf.format(d.latency[i])} ms · ${d.scoreLabel} ${nf.format(d.score[i])}`);
+    };
+
+    const stop = () => {
+      window.clearInterval(timer);
+      timer = 0;
+    };
+    const playBtn = root.querySelector<HTMLButtonElement>('[data-rp="play"]');
+    const play = () => {
+      stop();
+      if (playBtn) playBtn.textContent = d.again;
+      if (reduceMotion) {
+        render(d.focus);
+        return;
+      }
+      let i = 0;
+      render(i);
+      timer = window.setInterval(() => {
+        i += 1;
+        render(i);
+        if (i >= d.focus) stop();
+      }, 150);
+    };
+
+    slider.addEventListener('input', () => {
+      stop();
+      render(Number(slider.value));
+    });
+    const fromPointer = (e: PointerEvent) => {
+      const box = svg.getBoundingClientRect();
+      const vx = ((e.clientX - box.left) / box.width) * g.W;
+      const i = Math.round(((vx - g.L) / (g.W - g.L - g.R)) * (g.N - 1));
+      stop();
+      render(Math.min(Math.max(i, 0), g.N - 1));
+    };
+    svg.addEventListener('pointermove', fromPointer);
+    svg.addEventListener('pointerdown', fromPointer);
+    playBtn?.addEventListener('click', play);
+    root.querySelector('[data-rp="jump"]')?.addEventListener('click', () => {
+      stop();
+      render(d.focus);
+    });
+    render(Number(slider.value));
+  });
+</script>

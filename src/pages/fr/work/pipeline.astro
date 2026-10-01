@@ -1,0 +1,14 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Story from '../../../components/story/Story.astro';
+import RecordLab from '../../../components/leads/RecordLab.astro';
+import { stories } from '../../../data/stories';
+
+const m = stories.pipeline.fr.meta;
+---
+
+<Base lang="fr" title={m.title} description={m.description} path="/fr/work/pipeline/" altPath="/work/pipeline/" og="/og/pipeline-fr.png">
+  <Story lang="fr" slug="pipeline">
+    <RecordLab lang="fr" />
+  </Story>
+</Base>

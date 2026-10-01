@@ -1,0 +1,14 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Story from '../../../components/story/Story.astro';
+import SqlToggle from '../../../components/essor/SqlToggle.astro';
+import { stories } from '../../../data/stories';
+
+const m = stories.essor.fr.meta;
+---
+
+<Base lang="fr" title={m.title} description={m.description} path="/fr/work/essor/" altPath="/work/essor/" og="/og/essor-fr.png">
+  <Story lang="fr" slug="essor">
+    <SqlToggle lang="fr" />
+  </Story>
+</Base>

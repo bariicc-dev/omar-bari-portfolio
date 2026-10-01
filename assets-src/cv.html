@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Omar Bari, CV</title>
+<style>
+  @font-face {
+    font-family: 'Archivo Variable';
+    src: url('../node_modules/@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'Fragment Mono';
+    src: url('../node_modules/@fontsource/fragment-mono/files/fragment-mono-latin-400-normal.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+  }
+  @page { size: A4; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 210mm; }
+  body {
+    font-family: 'Archivo Variable', 'Instrument Sans', Arial, sans-serif;
+    color: #1b1813;
+    background: #fdfbf7;
+    padding: 9mm 13mm 6mm;
+    font-size: 8.45pt;
+    line-height: 1.33;
+    font-weight: 420;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .mono { font-family: 'Fragment Mono', Consolas, monospace; }
+
+  /* header */
+  header { display: flex; justify-content: space-between; align-items: flex-start; }
+  .name { font-size: 21pt; font-weight: 800; letter-spacing: -0.02em; line-height: 1; }
+  .name .dot { color: #e0420c; }
+  .role { margin-top: 2.2mm; font-size: 10pt; font-weight: 650; }
+  .tags { margin-top: 1.2mm; font-family: 'Fragment Mono', monospace; font-size: 6.6pt; letter-spacing: 0.08em; text-transform: uppercase; color: #6e675b; }
+  .contact { text-align: right; font-family: 'Fragment Mono', monospace; font-size: 6.9pt; line-height: 1.75; color: #4c463c; padding-top: 1mm; }
+
+  /* sections */
+  section { margin-top: 3.1mm; }
+  h2 {
+    display: flex; align-items: center; gap: 3mm;
+    font-family: 'Fragment Mono', monospace;
+    font-size: 6.8pt; letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 400; color: #b03305;
+    margin-bottom: 1.7mm;
+  }
+  h2::after { content: ''; flex: 1; height: 0.35mm; background: #1b1813; opacity: 0.85; }
+
+  .entry { margin-bottom: 2mm; }
+  .entry:last-child { margin-bottom: 0; }
+  .erow { display: flex; justify-content: space-between; align-items: baseline; gap: 6mm; }
+  .etitle { font-size: 9.6pt; font-weight: 700; letter-spacing: -0.01em; }
+  .edate { font-family: 'Fragment Mono', monospace; font-size: 6.9pt; color: #4c463c; white-space: nowrap; }
+  .eorg { display: flex; justify-content: space-between; font-size: 8.6pt; color: #4c463c; margin-top: 0.4mm; }
+  .eorg em { font-style: normal; }
+  .stack { font-family: 'Fragment Mono', monospace; font-size: 6.6pt; color: #6e675b; margin-top: 0.5mm; letter-spacing: 0.02em; }
+  ul { margin-top: 0.8mm; padding-left: 4mm; }
+  li { margin-bottom: 0.4mm; }
+  li::marker { color: #b03305; }
+
+  .skills p { margin-bottom: 0.8mm; }
+  .skills b { font-weight: 680; }
+  .profile { color: #33302a; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="name">OMAR BARI<span class="dot">.</span></p>
+      <p class="role">Final-Year Data &amp; AI Engineering Student</p>
+      <p class="tags">Data Engineering · Applied AI · LLM Systems · Backend Development</p>
+    </div>
+    <div class="contact">
+      Paris, France<br />
+      +33 7 45 32 86 24<br />
+      omar.bari@edu.devinci.fr<br />
+      linkedin.com/in/omar-bari<br />
+      github.com/bariicc-dev
+    </div>
+  </header>
+
+  <section>
+    <h2>Profile</h2>
+    <p class="profile">
+      Final-year Data &amp; AI Engineering student at ESILV with hands-on experience in data pipelines, applied machine
+      learning, RAG systems and reliable AI backends. I build LLM applications where retrieval, validation and software
+      controls protect business data. Seeking a <b>six-month Data Engineering, Applied AI or Machine Learning internship
+      starting February 2027</b>.
+    </p>
+  </section>
+
+  <section>
+    <h2>Professional Experience</h2>
+    <div class="entry">
+      <div class="erow"><span class="etitle">Data &amp; AI Engineering Intern</span><span class="edate">May 2026 to Sep 2026</span></div>
+      <div class="eorg"><em>B-AGILE SARL, Essor AI Copilot</em><em>Casablanca, Morocco</em></div>
+      <ul>
+        <li>Built an end-to-end ERP copilot with React, FastAPI, Pydantic, PostgreSQL and SQLAlchemy, covering purchasing, receptions, stock and supplier returns from sanitized business exports.</li>
+        <li>Implemented semantic request planning, hybrid RAG with embeddings and cited sources, deterministic validation, and controlled actions with preview, confirmation, idempotency and audit trails.</li>
+      </ul>
+    </div>
+    <div class="entry">
+      <div class="erow"><span class="etitle">Software Engineering Intern, AIOps &amp; Machine Learning</span><span class="edate">Apr 2025 to Jun 2025</span></div>
+      <div class="eorg"><em>Société Générale ABS</em><em>Casablanca, Morocco</em></div>
+      <ul>
+        <li>Prepared operational incident data, engineered features and built scikit-learn components for anomaly detection and incident classification.</li>
+        <li>Prototyped a RAG assistant over technical runbooks using document chunking, embeddings and semantic search to support incident diagnosis.</li>
+      </ul>
+    </div>
+    <div class="entry">
+      <div class="erow"><span class="etitle">Data Analyst Intern</span><span class="edate">Jun 2025 to Aug 2025</span></div>
+      <div class="eorg"><em>A.G.T.T, Agence Générale de Transit et de Transports</em><em>Casablanca, Morocco</em></div>
+      <ul>
+        <li>Built Python and SQL ETL workflows to consolidate operational data and automate recurring Excel reports and data-quality checks.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Selected Engineering Projects</h2>
+    <div class="entry">
+      <div class="erow"><span class="etitle">Essor AI Copilot, Controlled RAG Assistant for ERP</span><span class="edate">2026</span></div>
+      <p class="stack">Python · FastAPI · PostgreSQL · SQLAlchemy · Alembic · React · RAG · Docker</p>
+      <ul>
+        <li>Designed a semantic planner using an NVIDIA-compatible LLM with a deterministic fallback, mapping French requests to typed, allowlisted PostgreSQL operations instead of model-generated SQL.</li>
+        <li>Built a hybrid RAG pipeline with chunking, metadata enrichment, embeddings, vector indexing, lexical and semantic search, RRF fusion, evidence thresholds and source citations; added safe confirmable writes.</li>
+      </ul>
+    </div>
+    <div class="entry">
+      <div class="erow"><span class="etitle">AIOps Incident Intelligence &amp; RAG Assistant, Société Générale ABS</span><span class="edate">2025</span></div>
+      <p class="stack">Python · FastAPI · PostgreSQL · Kafka · scikit-learn · NLP · RAG · Docker</p>
+      <ul>
+        <li>Structured incidents, API health checks and monitoring events in PostgreSQL, then exposed operational indicators through FastAPI services.</li>
+        <li>Combined feature engineering, anomaly detection and classification with an embedding-based semantic search pipeline over runbooks to improve incident triage and diagnosis.</li>
+      </ul>
+    </div>
+    <div class="entry">
+      <div class="erow"><span class="etitle">B2B Lead Qualification Engine, ESILV × Red Alert Labs</span><span class="edate">Oct 2025</span></div>
+      <p class="stack">Python · MongoDB · Web Scraping · JSON Schema · Airtable</p>
+      <ul>
+        <li>Built an end-to-end pipeline for public B2B lead data, with separate RAW and CLEANED MongoDB layers for traceability and auditability.</li>
+        <li>Made ingestion idempotent and recoverable with schema validation, retries and backfills, while applying GDPR-conscious data processing.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    <div class="entry">
+      <div class="erow"><span class="etitle">Engineering Degree in Data &amp; Artificial Intelligence, Final Year</span><span class="edate">2025 to 2027</span></div>
+      <div class="eorg"><em>ESILV, De Vinci Engineering School</em><em>Paris, France</em></div>
+      <ul>
+        <li>Machine Learning, Deep Learning, NLP, Big Data, Cloud Computing, Data Engineering and statistical modeling.</li>
+      </ul>
+    </div>
+    <div class="entry">
+      <div class="erow"><span class="etitle">Licence MIAGE, Computer Science Applied to Management</span><span class="edate">2022 to 2025</span></div>
+      <div class="eorg"><em>Université Internationale de Casablanca</em><em>Casablanca, Morocco</em></div>
+      <ul>
+        <li>Software engineering, Java, SQL, databases, information systems and project management.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="skills">
+    <h2>Technical Skills</h2>
+    <p><b>Programming and Data:</b> Python, SQL, PostgreSQL, MongoDB, Pandas, ETL/ELT, data modeling, data quality and Kafka fundamentals.</p>
+    <p><b>AI and Machine Learning:</b> scikit-learn, NLP, RAG, LLM orchestration, prompt engineering, embeddings, vector search, semantic search, classification, anomaly detection and SHAP.</p>
+    <p><b>Backend and Delivery:</b> FastAPI, Pydantic, SQLAlchemy, Alembic, REST APIs, Docker, Git, GitHub Actions, Java and Spring Boot.</p>
+    <p><b>Analytics and Languages:</b> Power BI, Tableau, Airtable, Plotly and Streamlit. Arabic: native; French and English: fluent.</p>
+  </section>
+</body>
+</html>

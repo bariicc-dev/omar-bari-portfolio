@@ -1,0 +1,136 @@
+---
+import '@fontsource-variable/mona-sans/wdth.css';
+import '@fontsource-variable/martian-mono/wdth.css';
+import '../styles/global.css';
+import sansFont from '@fontsource-variable/mona-sans/files/mona-sans-latin-wdth-normal.woff2?url';
+import Nav from '../components/Nav.astro';
+import Contact from '../components/Contact.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_URL, HAS_DOMAIN, NAME, EMAIL, LINKEDIN, GITHUB } from '../data/site';
+import { ui, type Lang } from '../data/ui';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** this page's path, e.g. '/work/essor/' */
+  path: string;
+  /** the same page in the other language */
+  altPath: string;
+  /** social preview image in /public, e.g. '/og/essor-en.png' */
+  og?: string;
+  isHome?: boolean;
+  noindex?: boolean;
+  /** hide the contact ending (404) */
+  bare?: boolean;
+}
+const { lang, title, description, path, altPath, og = `/og/home-${lang}.png`, isHome = false, noindex = false, bare = false } = Astro.props;
+const t = ui[lang];
+const abs = (p: string) => (HAS_DOMAIN ? new URL(p, SITE_URL).href : undefined);
+const canonical = abs(path);
+const altUrl = abs(altPath);
+const ogImage = abs(og);
+const other = lang === 'en' ? 'fr' : 'en';
+
+const jsonLd = isHome
+  ? JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: NAME,
+      jobTitle: lang === 'fr' ? 'Étudiant ingénieur Data & IA' : 'Data & AI engineering student',
+      affiliation: { '@type': 'CollegeOrUniversity', name: 'ESILV, De Vinci Engineering School' },
+      address: { '@type': 'PostalAddress', addressLocality: 'Paris', addressCountry: 'FR' },
+      email: `mailto:${EMAIL}`,
+      knowsLanguage: ['ar', 'fr', 'en'],
+      sameAs: [LINKEDIN, GITHUB],
+      ...(HAS_DOMAIN ? { url: SITE_URL, image: abs('/og/home-en.png') } : {}),
+    })
+  : null;
+---
+
+<!doctype html>
+<html lang={lang} class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#070b13" />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="preload" href={sansFont} as="font" type="font/woff2" crossorigin />
+    <script is:inline>
+      document.documentElement.classList.remove('no-js');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {
+      canonical && altUrl && (
+        <>
+          <link rel="alternate" hreflang={lang} href={canonical} />
+          <link rel="alternate" hreflang={other} href={altUrl} />
+          <link rel="alternate" hreflang="x-default" href={lang === 'en' ? canonical : altUrl} />
+        </>
+      )
+    }
+    <meta property="og:type" content={isHome ? 'profile' : 'article'} />
+    <meta property="og:site_name" content={NAME} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content={lang === 'fr' ? 'fr_FR' : 'en_US'} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {ogImage && <meta property="og:image:width" content="1200" />}
+    {ogImage && <meta property="og:image:height" content="630" />}
+    {ogImage && <meta property="og:image:alt" content={title} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    {jsonLd && <script type="application/ld+json" set:html={jsonLd} />}
+  </head>
+  <body>
+    <a class="skip" href="#main">{t.skip}</a>
+    <Nav lang={lang} altPath={altPath} />
+    <main id="main">
+      <slot />
+      {!bare && <Contact lang={lang} />}
+    </main>
+    <Footer lang={lang} />
+    <p class="sr" aria-live="polite" id="announcer"></p>
+
+    <script>
+      // Copy buttons: data-copy holds the text to copy.
+      const announcer = document.getElementById('announcer');
+      document.addEventListener('click', async (e) => {
+        const btn = (e.target as Element | null)?.closest<HTMLElement>('[data-copy]');
+        if (!btn) return;
+        const text = btn.dataset.copy ?? '';
+        let ok = true;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly', '');
+          ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            ok = document.execCommand('copy');
+          } catch {
+            ok = false;
+          }
+          ta.remove();
+        }
+        if (!ok) return;
+        const label = btn.querySelector<HTMLElement>('[data-copy-label]');
+        const before = label?.textContent ?? '';
+        if (label) label.textContent = btn.dataset.done ?? before;
+        btn.dataset.state = 'done';
+        if (announcer) announcer.textContent = btn.dataset.done ?? '';
+        window.setTimeout(() => {
+          if (label) label.textContent = before;
+          btn.dataset.state = '';
+        }, 2400);
+      });
+    </script>
+  </body>
+</html>

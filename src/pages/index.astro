@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import Hero from '../components/home/Hero.astro';
+import Work from '../components/home/Work.astro';
+import About from '../components/home/About.astro';
+import { home } from '../data/home';
+
+const t = home.en.meta;
+---
+
+<Base lang="en" title={t.title} description={t.description} path="/" altPath="/fr/" isHome>
+  <Hero lang="en" />
+  <Work lang="en" />
+  <About lang="en" />
+</Base>

@@ -1,0 +1,98 @@
+---
+import { ui, type Lang } from '../data/ui';
+import { CV_PATH } from '../data/site';
+
+interface Props {
+  lang: Lang;
+  altPath: string;
+}
+const { lang, altPath } = Astro.props;
+const t = ui[lang];
+const root = lang === 'fr' ? '/fr/' : '/';
+const other = lang === 'en' ? 'fr' : 'en';
+---
+
+<header class="nav">
+  <div class="container nav-row">
+    <a class="nav-name" href={root} aria-label={t.nav.home}>Omar Bari</a>
+    <nav aria-label={t.nav.label}>
+      <a class="nav-link nav-work" href={`${root}#work`}>{t.nav.work}</a>
+      <a class="nav-link nav-wide" href={`${root}#about`}>{t.nav.about}</a>
+      <a class="nav-link nav-wide" href={CV_PATH} download title={t.nav.cvTitle}>{t.nav.cv}</a>
+      <a class="nav-link nav-lang" href={altPath} lang={other} hreflang={other} title={t.nav.langTitle}>{t.nav.lang}</a>
+      <a class="btn btn--ghost nav-contact" href="#contact">{t.nav.contact}</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(7, 11, 19, 0.78);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: var(--nav-h);
+  }
+  .nav-name {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font-size: 1.06rem;
+    font-stretch: 112%;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding-inline: 0.7rem;
+    border-radius: 10px;
+    font-size: 0.94rem;
+    font-weight: 540;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .nav-link:hover {
+    color: var(--text);
+  }
+  .nav-lang {
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+  .nav-contact {
+    min-height: 2.5rem;
+    margin-left: 0.4rem;
+    padding: 0.5rem 0.95rem;
+    font-size: 0.92rem;
+  }
+  @media (max-width: 820px) {
+    .nav-wide {
+      display: none;
+    }
+  }
+  @media (max-width: 370px) {
+    .nav-work {
+      display: none;
+    }
+  }
+</style>

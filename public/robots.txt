@@ -1,0 +1,7 @@
+# Omar Bari — portfolio
+User-agent: *
+Allow: /
+
+# Once the site has its real domain set in src/data/site.ts, the build
+# emits /sitemap-index.xml — add the line below (with the real domain):
+# Sitemap: https://YOUR-DOMAIN/sitemap-index.xml

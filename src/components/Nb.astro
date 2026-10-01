@@ -1,0 +1,10 @@
+---
+/** Text in which hyphenated words (B-AGILE, PO-2031, six-month) never break at the hyphen. */
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+const parts = text.split(/(\S*\w-\w\S*)/);
+---
+
+{parts.map((p) => (/\w-\w/.test(p) ? <span class="nowrap">{p}</span> : p))}

@@ -1,0 +1,162 @@
+---
+import { Image } from 'astro:assets';
+import Nb from '../Nb.astro';
+import { home, type Row } from '../../data/home';
+import { logos } from '../../data/logos';
+import { orgNames, logoHeight } from '../../data/orgs';
+import { storyHref } from '../../data/stories';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const a = home[lang].about;
+const groups: { title: string; rows: Row[] }[] = [
+  { title: a.expTitle, rows: a.exp },
+  { title: a.eduTitle, rows: a.edu },
+];
+---
+
+<section class="section about" id="about" aria-labelledby="about-title">
+  <div class="container about-grid">
+    <div class="about-me">
+      <h2 id="about-title" class="h2">{a.title}</h2>
+      <p class="lede about-p"><Nb text={a.p} /></p>
+    </div>
+    <div class="record">
+      {
+        groups.map((g) => (
+          <div class="group">
+            <h3 class="group-title">{g.title}</h3>
+            <ul class="rows">
+              {g.rows.map((r) => (
+                <li class="row">
+                  <span class="logo">
+                    <Image src={logos[r.org]} alt={orgNames[r.org]} height={logoHeight[r.org]} densities={[1, 2]} loading="lazy" />
+                  </span>
+                  <div class="row-text">
+                    <p class="row-role">{r.role}</p>
+                    <p class="row-where">
+                      <Nb text={r.where} />
+                    </p>
+                    {r.note && (
+                      <p class="row-note">
+                        <Nb text={r.note} />
+                      </p>
+                    )}
+                    {r.story && (
+                      <a class="go row-go" href={storyHref(lang, r.story)}>
+                        {a.storyLink}
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                          <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.7" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                  <p class="row-when">{r.when}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .about-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: clamp(2.5rem, 6vw, 5.5rem);
+    align-items: start;
+  }
+  .about-p {
+    margin-top: 1.2rem;
+    max-width: 30em;
+  }
+  .group + .group {
+    margin-top: 2.2rem;
+  }
+  .group-title {
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--line-2);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-2);
+  }
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    gap: 0.3rem 1.2rem;
+    align-items: start;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.6rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 9px;
+    background: #fff;
+  }
+  .logo :global(img) {
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+  .row-role {
+    font-weight: 620;
+    line-height: 1.35;
+  }
+  .row-where {
+    margin-top: 0.1rem;
+    font-size: 0.93rem;
+    color: var(--text-2);
+  }
+  .row-note {
+    margin-top: 0.35rem;
+    font-size: 0.93rem;
+    color: var(--text-2);
+    text-wrap: pretty;
+  }
+  .row-go {
+    min-height: 2.5rem;
+    font-size: 0.92rem;
+    color: var(--accent);
+  }
+  .row-when {
+    font-size: 0.875rem;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+  @media (max-width: 899px) {
+    .about-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 560px) {
+    .row {
+      grid-template-columns: 5.2rem minmax(0, 1fr);
+    }
+    .row-when {
+      grid-column: 2;
+      grid-row: 1;
+      margin-bottom: 0.1rem;
+    }
+    .row-text {
+      grid-column: 2;
+    }
+    .logo {
+      grid-row: 1 / 3;
+    }
+  }
+</style>

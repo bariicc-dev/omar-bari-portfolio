@@ -1,0 +1,118 @@
+---
+/** The decision, drawn: the short list the model picks from, and what isn't on it. */
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = {
+  en: {
+    cap: 'What the model can pick',
+    ok: ['Record a delivery', 'Prepare a supplier return', 'Answer from the documents'],
+    no: 'Delete a delivery',
+    noNote: 'not on the list',
+  },
+  fr: {
+    cap: 'Ce que le modèle peut choisir',
+    ok: ['Enregistrer une réception', 'Préparer un retour fournisseur', 'Répondre depuis les documents'],
+    no: 'Supprimer une réception',
+    noNote: 'pas dans la liste',
+  },
+}[lang];
+---
+
+<div class="art art-essor">
+  <p class="art-cap">{t.cap}</p>
+  <ul class="ops">
+    {
+      t.ok.map((x) => (
+        <li class="op op--ok">
+          <span class="op-mark" />
+          {x}
+        </li>
+      ))
+    }
+    <li class="op op--no">
+      <span class="op-mark"></span>
+      <s>{t.no}</s>
+      <span class="op-note">{t.noNote}</span>
+    </li>
+  </ul>
+</div>
+
+<style>
+  .art-essor {
+    background: radial-gradient(260px 160px at 0% 0%, rgba(200, 242, 80, 0.08), transparent 70%);
+  }
+  .ops {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .op {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+    font-size: 0.86rem;
+    font-weight: 540;
+    white-space: nowrap;
+  }
+  .op-mark {
+    position: relative;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    background: var(--accent);
+  }
+  .op--ok .op-mark::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--accent-ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .op--no {
+    border-style: dashed;
+    border-color: rgba(255, 122, 110, 0.45);
+    background: var(--stop-soft);
+    color: var(--stop);
+  }
+  .op--no s {
+    text-decoration-thickness: 1.5px;
+  }
+  .op--no .op-mark {
+    background: var(--stop);
+  }
+  .op--no .op-mark::before,
+  .op--no .op-mark::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 7px;
+    width: 10px;
+    height: 2px;
+    background: #2a0703;
+    transform: rotate(45deg);
+  }
+  .op--no .op-mark::after {
+    transform: rotate(-45deg);
+  }
+  .op-note {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 560;
+    opacity: 0.85;
+  }
+</style>

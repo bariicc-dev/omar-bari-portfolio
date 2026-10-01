@@ -1,0 +1,153 @@
+---
+/** The transformation, drawn: a messy RAW record, two failed fetches, then the CLEANED record. */
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = {
+  en: { tries: '3 fetch attempts', kept: 'RAW is kept exactly as scraped' },
+  fr: { tries: '3 tentatives', kept: 'RAW reste tel que scrapé' },
+}[lang];
+// middle dots make the stray spaces visible
+const raw: [string, string][] = [
+  ['Company', '"··ACME Cyber··"'],
+  ['country', '"FR·"'],
+  ['Employees', '"50-100 ?"'],
+];
+const clean: [string, string][] = [
+  ['company_name', '"ACME Cyber"'],
+  ['country', '"FR"'],
+  ['employees_range', '"50-99"'],
+];
+---
+
+<div class="art art-pipe">
+  <div class="tries" aria-hidden="true">
+    <span class="try try--x"></span><span class="try try--x"></span><span class="try try--ok"></span>
+    <span class="tries-k">{t.tries}</span>
+  </div>
+  <div class="recs">
+    <div class="rec rec--raw">
+      <p class="rec-h">RAW</p>
+      <dl>
+        {
+          raw.map(([k, v]) => (
+            <div>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+    <svg class="arrow" viewBox="0 0 24 24" fill="none"><path d="M3 12h16M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8"></path></svg>
+    <div class="rec rec--clean">
+      <p class="rec-h">CLEANED</p>
+      <dl>
+        {
+          clean.map(([k, v]) => (
+            <div>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+  <p class="kept">{t.kept}</p>
+</div>
+
+<style>
+  .art-pipe {
+    background: radial-gradient(260px 160px at 100% 100%, rgba(163, 194, 255, 0.09), transparent 70%);
+  }
+  .tries {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .try {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .try--x {
+    background: var(--stop);
+  }
+  .try--ok {
+    background: var(--accent);
+  }
+  .tries-k {
+    margin-left: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 560;
+    color: var(--text-2);
+  }
+  .recs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.65rem;
+  }
+  .rec {
+    min-width: 0;
+    padding: 0.55rem 0.6rem;
+    border-radius: 10px;
+    font-family: var(--mono);
+    font-stretch: 75%;
+    font-size: 0.66rem;
+    line-height: 1.55;
+  }
+  .rec--raw {
+    border: 1px dashed var(--line-3);
+    background: var(--surface-2);
+  }
+  .rec--clean {
+    border: 1px solid rgba(200, 242, 80, 0.4);
+    background: rgba(200, 242, 80, 0.06);
+  }
+  .rec-h {
+    margin-bottom: 0.3rem;
+    font-family: var(--sans);
+    font-stretch: 110%;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .rec--clean .rec-h {
+    color: var(--accent);
+  }
+  .rec dl {
+    margin: 0;
+  }
+  .rec dl div {
+    display: grid;
+  }
+  .rec dt {
+    color: var(--text-3);
+  }
+  .rec dd {
+    margin: 0 0 0.15rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rec--raw dd {
+    color: var(--ask);
+  }
+  .arrow {
+    width: 20px;
+    height: 20px;
+    color: var(--text-2);
+  }
+  .kept {
+    margin-top: 0.55rem;
+    font-size: 0.8rem;
+    font-weight: 560;
+    color: var(--text-2);
+  }
+</style>

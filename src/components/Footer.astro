@@ -1,0 +1,43 @@
+---
+import { ui, type Lang } from '../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = ui[lang].footer;
+---
+
+<footer class="foot">
+  <div class="container foot-row">
+    <p>{t.rights}</p>
+    <p>{t.note}</p>
+    <a href="#main">{t.top}</a>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    border-top: 1px solid var(--line);
+    color: var(--text-3);
+    font-size: 0.875rem;
+  }
+  .foot-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem 2rem;
+    padding-block: 1.4rem calc(1.4rem + env(safe-area-inset-bottom, 0px));
+  }
+  .foot a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--text-2);
+    text-decoration: none;
+  }
+  .foot a:hover {
+    color: var(--accent);
+  }
+</style>

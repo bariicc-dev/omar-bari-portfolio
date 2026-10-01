@@ -1,0 +1,152 @@
+---
+import Decide from './Decide.astro';
+import Nb from '../Nb.astro';
+import { home } from '../../data/home';
+import type { Lang } from '../../data/ui';
+// The original 200 × 200 photo, served byte for byte: no resizing, no re-encoding.
+import photo from '../../assets/portrait.jpg?url';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const h = home[lang].hero;
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <div class="who">
+        <img class="who-photo" src={photo} width="200" height="200" alt={h.alt} fetchpriority="high" decoding="async" />
+        <div>
+          <p class="who-name">Omar Bari</p>
+          <p class="who-role">{h.role}</p>
+        </div>
+      </div>
+      <h1 id="hero-title" class="display hero-title">{h.title}</h1>
+      <p class="lede hero-lede"><Nb text={h.lede} /></p>
+      <div class="hero-actions">
+        <a class="btn btn--accent hero-try" href="#try" data-pick="refuse">
+          {h.try}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.7"></path>
+          </svg>
+        </a>
+        <p class="avail"><span class="avail-dot" aria-hidden="true"></span><span><Nb text={h.avail} /></span></p>
+      </div>
+    </div>
+    <div class="hero-demo" id="try">
+      <Decide lang={lang} />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    overflow-x: clip;
+    padding-block: clamp(2rem, 5vw, 4rem) clamp(3rem, 6vw, 5rem);
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+  .hero-copy {
+    padding-top: clamp(0.5rem, 3vw, 2.5rem);
+  }
+  .who {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .who-photo {
+    flex: none;
+    width: 84px;
+    height: 84px;
+    border-radius: 20px;
+    object-fit: cover;
+    box-shadow:
+      0 0 0 1px var(--line-2),
+      0 14px 30px -14px rgba(0, 0, 0, 0.7);
+  }
+  .who-name {
+    font-size: 1.1rem;
+    font-stretch: 108%;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  .who-role {
+    margin-top: 0.1rem;
+    font-size: 0.95rem;
+    color: var(--text-2);
+  }
+  .hero-title {
+    margin-top: clamp(1.6rem, 3vw, 2.2rem);
+    font-size: clamp(2.5rem, 1.35rem + 3.5vw, 4.25rem);
+  }
+  .hero-lede {
+    margin-top: 1.3rem;
+    max-width: 33em;
+  }
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.4rem;
+    margin-top: 2rem;
+  }
+  .hero-try {
+    min-height: 3.1rem;
+    padding-inline: 1.25rem;
+  }
+  .hero-try svg {
+    transition: transform 0.22s var(--ease);
+  }
+  .hero-try:hover svg {
+    transform: translateX(3px);
+  }
+  .avail {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.92rem;
+    font-weight: 540;
+    color: var(--text-2);
+  }
+  .avail-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .hero-demo {
+    scroll-margin-top: calc(var(--nav-h) + 1rem);
+  }
+  @media (max-width: 1020px) {
+    .hero-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .hero-copy {
+      padding-top: 0;
+    }
+    .hero-try svg {
+      transform: rotate(90deg);
+    }
+    .hero-try:hover svg {
+      transform: rotate(90deg) translateX(3px);
+    }
+  }
+  @media (max-width: 560px) {
+    .who-photo {
+      width: 68px;
+      height: 68px;
+      border-radius: 17px;
+    }
+    .hero-try {
+      width: 100%;
+    }
+  }
+</style>

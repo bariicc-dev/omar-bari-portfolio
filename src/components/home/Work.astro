@@ -1,0 +1,71 @@
+---
+import Tile from './Tile.astro';
+import { home } from '../../data/home';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const w = home[lang].work;
+---
+
+<section class="section work" id="work" aria-labelledby="work-title">
+  <div class="container">
+    <div class="work-head">
+      <h2 id="work-title" class="h2">{w.title}</h2>
+      <p class="lede">{w.lede}</p>
+    </div>
+    <ul class="tiles">
+      {
+        w.order.map((slug) => (
+          <li>
+            <Tile lang={lang} slug={slug} />
+          </li>
+        ))
+      }
+    </ul>
+    <div class="small">
+      <Tile lang={lang} slug={w.small} small />
+    </div>
+  </div>
+</section>
+
+<style>
+  .work {
+    padding-top: clamp(2.5rem, 6vw, 5rem);
+  }
+  .work-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.8rem 3rem;
+  }
+  .work-head .h2 {
+    max-width: 14em;
+  }
+  .work-head .lede {
+    max-width: 24em;
+    padding-bottom: 0.3rem;
+  }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: clamp(2rem, 4vw, 2.8rem) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tiles > li {
+    min-width: 0;
+  }
+  .small {
+    margin-top: 1rem;
+  }
+  @media (max-width: 999px) {
+    .tiles {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,347 @@
+---
+/**
+ * "Same request, two designs". Two radio groups pick the request and the
+ * design; CSS :has() shows the matching pair, so it works with the keyboard
+ * and without JavaScript. Illustrative: the SQL side is the rejected design.
+ */
+import Nb from '../Nb.astro';
+import { sqlToggle } from '../../data/stories/essor';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = sqlToggle[lang];
+const designs = ['sql', 'typed'] as const;
+const id = (s: string) => `tg-${lang}-${s}`;
+---
+
+<div class="tg">
+  <p class="tg-note">{t.note}</p>
+  <div class="tg-controls">
+    <fieldset class="tg-group">
+      <legend class="label">{t.requestLabel}</legend>
+      <div class="tg-reqs">
+        {
+          t.requests.map((r, i) => (
+            <>
+              <input class="sr tg-in" type="radio" name={id('req')} id={id(`req-${r.id}`)} value={r.id} checked={i === 0} />
+              <label class="tg-req" for={id(`req-${r.id}`)}>
+                <Nb text={r.text} />
+              </label>
+            </>
+          ))
+        }
+      </div>
+    </fieldset>
+    <fieldset class="tg-group">
+      <legend class="label">{t.designLabel}</legend>
+      <div class="tg-seg">
+        {
+          designs.map((d, i) => (
+            <>
+              <input class="sr tg-in" type="radio" name={id('design')} id={id(`d-${d}`)} value={d} checked={i === 0} />
+              <label class={`tg-d tg-d--${d}`} for={id(`d-${d}`)}>
+                {t.designs[d]}
+              </label>
+            </>
+          ))
+        }
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="tg-stage">
+    {
+      t.requests.map((r) =>
+        designs.map((d) => {
+          const x = r[d];
+          return (
+            <div class={`tg-combo tg-combo--${d}`} data-req={r.id} data-design={d}>
+              <div class="tg-code">
+                <p class="tg-code-k">{t.outputLabel[d]}</p>
+                <pre><code>{x.code}</code></pre>
+              </div>
+              <div class={`tg-result tg-result--${x.verdict}`}>
+                <p class="tg-verdict">
+                  <span class="tg-icon" aria-hidden="true" />
+                  <Nb text={x.result} />
+                </p>
+                {x.checks && (
+                  <ul class="tg-checks">
+                    {x.checks.map((c) => (
+                      <li class={c.ok ? 'is-ok' : 'is-no'}>{c.t}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          );
+        })
+      )
+    }
+  </div>
+</div>
+
+<style>
+  .tg {
+    position: relative;
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    border: 1px solid var(--line-2);
+    border-radius: 22px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  }
+  .tg-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 1rem 1.6rem;
+  }
+  .tg-group {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .tg-group legend {
+    margin-bottom: 0.5rem;
+    padding: 0;
+  }
+  .tg-reqs {
+    display: grid;
+    gap: 0.45rem;
+  }
+  .tg-req,
+  .tg-d {
+    display: flex;
+    align-items: center;
+    min-height: 2.9rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+    background: var(--bg-2);
+    font-size: 0.95rem;
+    font-weight: 540;
+    line-height: 1.3;
+    cursor: pointer;
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease,
+      color 0.18s ease;
+  }
+  .tg-req:hover,
+  .tg-d:hover {
+    border-color: var(--line-3);
+  }
+  .tg-in:checked + .tg-req {
+    border-color: var(--text-2);
+    background: var(--surface-3);
+  }
+  .tg-in:focus-visible + label {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .tg-seg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+    padding: 0.3rem;
+    border: 1px solid var(--line-2);
+    border-radius: 14px;
+    background: var(--bg-2);
+  }
+  .tg-d {
+    justify-content: center;
+    border-color: transparent;
+    background: transparent;
+    text-align: center;
+    color: var(--text-2);
+  }
+  .tg-in:checked + .tg-d--sql {
+    border-color: rgba(255, 122, 110, 0.5);
+    background: var(--stop-soft);
+    color: var(--text);
+  }
+  .tg-in:checked + .tg-d--typed {
+    border-color: rgba(200, 242, 80, 0.55);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+
+  .tg-stage {
+    margin-top: 1.2rem;
+  }
+  .tg-combo {
+    display: none;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: stretch;
+  }
+  /* show the pair that matches both choices */
+  .tg:has(input[value='delete']:checked):has(input[value='sql']:checked) .tg-combo[data-req='delete'][data-design='sql'],
+  .tg:has(input[value='delete']:checked):has(input[value='typed']:checked) .tg-combo[data-req='delete'][data-design='typed'],
+  .tg:has(input[value='record']:checked):has(input[value='sql']:checked) .tg-combo[data-req='record'][data-design='sql'],
+  .tg:has(input[value='record']:checked):has(input[value='typed']:checked) .tg-combo[data-req='record'][data-design='typed'] {
+    display: grid;
+    animation: tg-in 0.35s var(--ease-out);
+  }
+  @keyframes tg-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .tg-code {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #060910;
+  }
+  .tg-combo--sql .tg-code {
+    border-color: rgba(255, 122, 110, 0.35);
+  }
+  .tg-combo--typed .tg-code {
+    border-color: rgba(200, 242, 80, 0.35);
+  }
+  .tg-code-k {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.8125rem;
+    font-weight: 580;
+    color: var(--text-3);
+  }
+  .tg-code pre {
+    margin: 0;
+    padding: 0.9rem 1rem 1rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.8rem;
+    line-height: 1.65;
+  }
+  .tg-combo--sql code {
+    color: #ffd1cc;
+  }
+  .tg-combo--typed code {
+    color: #e6f7c4;
+  }
+  .tg-result {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.3rem;
+    border-radius: 14px;
+  }
+  .tg-result--stop {
+    background: var(--stop-soft);
+    border: 1px solid rgba(255, 122, 110, 0.3);
+  }
+  .tg-result--ok {
+    background: var(--accent-soft);
+    border: 1px solid rgba(200, 242, 80, 0.3);
+  }
+  .tg-verdict {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: start;
+    font-size: clamp(1.1rem, 1rem + 0.35vw, 1.25rem);
+    font-weight: 600;
+    line-height: 1.4;
+    text-wrap: pretty;
+  }
+  .tg-icon {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    margin-top: 0.05rem;
+    border-radius: 50%;
+  }
+  .tg-result--stop .tg-icon {
+    background: var(--stop);
+  }
+  .tg-result--stop .tg-icon::before,
+  .tg-result--stop .tg-icon::after {
+    content: '';
+    position: absolute;
+    left: 7px;
+    top: 12px;
+    width: 12px;
+    height: 2px;
+    background: #2a0703;
+    transform: rotate(45deg);
+  }
+  .tg-result--stop .tg-icon::after {
+    transform: rotate(-45deg);
+  }
+  .tg-result--ok .tg-icon {
+    background: var(--accent);
+  }
+  .tg-result--ok .tg-icon::after {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 5px;
+    width: 6px;
+    height: 12px;
+    border: solid var(--accent-ink);
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+  }
+  .tg-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tg-checks li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 0.82rem;
+    font-weight: 560;
+  }
+  .tg-checks li::before {
+    font-weight: 800;
+  }
+  .tg-checks .is-ok::before {
+    content: '✓';
+    color: var(--accent);
+  }
+  .tg-checks .is-no::before {
+    content: '✕';
+    color: var(--stop);
+  }
+  .tg-note {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+    color: var(--text-2);
+  }
+  .tg-note::before {
+    content: '';
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ask);
+  }
+  @media (max-width: 860px) {
+    .tg-controls {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .tg-combo {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

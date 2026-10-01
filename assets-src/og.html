@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>og</title>
+<!--
+  Social preview cards, 1200x630. One template, ten cards:
+  og.html?p=home|essor|aiops|pipeline|querypilot&l=en|fr
+  Rendered to public/og/<p>-<l>.png by render-assets.ps1.
+  The strings mirror src/data/home.ts and src/data/stories; update both together.
+-->
+<style>
+  @font-face {
+    font-family: 'Mona Sans';
+    src: url('../node_modules/@fontsource-variable/mona-sans/files/mona-sans-latin-wdth-normal.woff2') format('woff2');
+    font-weight: 200 900;
+    font-stretch: 75% 125%;
+  }
+  @font-face {
+    font-family: 'Martian Mono';
+    src: url('../node_modules/@fontsource-variable/martian-mono/files/martian-mono-latin-wdth-normal.woff2') format('woff2');
+    font-weight: 100 800;
+    font-stretch: 75% 112.5%;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; }
+  body {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(900px 520px at 88% -10%, rgba(70, 104, 190, 0.28), transparent 62%),
+      #070b13;
+    color: #eef2f9;
+    font-family: 'Mona Sans', Arial, sans-serif;
+  }
+  .who {
+    position: absolute;
+    left: 64px;
+    top: 56px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .who img {
+    width: 92px;
+    height: 92px;
+    border-radius: 22px;
+    box-shadow: 0 0 0 1px rgba(163, 184, 228, 0.25);
+  }
+  .who b { display: block; font-size: 30px; font-weight: 650; font-stretch: 110%; letter-spacing: -0.02em; }
+  .who span { display: block; margin-top: 2px; font-size: 21px; color: #b6bfd0; }
+  .brand {
+    position: absolute;
+    left: 64px;
+    top: 58px;
+    font-size: 26px;
+    font-weight: 650;
+    font-stretch: 112%;
+    letter-spacing: -0.02em;
+  }
+  .ctx {
+    position: absolute;
+    right: 64px;
+    top: 62px;
+    font-size: 20px;
+    color: #b6bfd0;
+  }
+  h1 {
+    position: absolute;
+    left: 64px;
+    right: 64px;
+    font-weight: 650;
+    font-stretch: 112%;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+  .home h1 { top: 196px; right: 470px; font-size: 76px; }
+  .story h1 { top: 150px; font-size: 76px; }
+  .answer {
+    position: absolute;
+    left: 64px;
+    right: 64px;
+    font-size: 28px;
+    line-height: 1.38;
+    color: #b6bfd0;
+  }
+  .foot {
+    position: absolute;
+    left: 64px;
+    right: 64px;
+    bottom: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 21px;
+    color: #b6bfd0;
+  }
+  .avail { display: inline-flex; align-items: center; gap: 12px; }
+  .avail i { width: 12px; height: 12px; border-radius: 50%; background: #c8f250; box-shadow: 0 0 0 6px rgba(200, 242, 80, 0.14); }
+  .go {
+    padding: 14px 22px;
+    border-radius: 14px;
+    background: #c8f250;
+    color: #0b1300;
+    font-size: 22px;
+    font-weight: 650;
+  }
+
+  /* the Essor decision on the home card */
+  .card {
+    position: absolute;
+    right: 64px;
+    top: 176px;
+    width: 380px;
+    padding: 22px;
+    border: 1px solid rgba(163, 184, 228, 0.2);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #111a2a, #0c1320);
+  }
+  .card .req {
+    padding: 14px 16px;
+    border: 1px solid #c8f250;
+    border-radius: 12px;
+    background: rgba(200, 242, 80, 0.08);
+    font-size: 19px;
+    font-weight: 560;
+  }
+  .card .checks { display: flex; gap: 14px; margin-top: 16px; font-size: 15px; font-weight: 600; }
+  .card .checks span { display: inline-flex; align-items: center; gap: 6px; }
+  .card .ok::before, .card .no::before { content: ''; width: 14px; height: 14px; border-radius: 50%; }
+  .card .ok::before { background: #c8f250; }
+  .card .no::before { background: #ff7a6e; }
+  .card .no { color: #ff7a6e; }
+  .card .out {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-left: 3px solid #ff7a6e;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .card .out b { display: block; color: #ff7a6e; font-size: 22px; font-weight: 660; }
+  .card .out span { display: block; margin-top: 4px; font-size: 16px; line-height: 1.4; color: #d6dcea; }
+</style>
+</head>
+<body>
+<script>
+  const NB = ' ';
+  const data = {
+    en: {
+      role: 'Data & AI engineering student · ESILV, Paris',
+      title: 'I build AI tools that ask before they act.',
+      avail: 'Open to a 6-month internship from February 2027',
+      req: 'Delete the last three deliveries.',
+      checks: ['Understood', 'Evidence', 'Allowed'],
+      refused: 'Refused',
+      reply: 'Deleting isn’t an operation it has. It offers a supplier return instead.',
+      read: 'Read the story',
+      stories: {
+        essor: { ctx: 'B-AGILE · internship, 2026', q: 'Why couldn’t the assistant write its own SQL?', a: 'Because a model that writes SQL can write the wrong SQL. So the model picks an operation from a short list, and code writes the query.' },
+        aiops: { ctx: 'Société Générale ABS · internship, 2025', q: 'An API slows down at 14:02. What should the engineer see first?', a: 'A flag with a reason, and the runbook step that fits. Replay a fictional incident.' },
+        pipeline: { ctx: 'ESILV project with Red Alert Labs · 2025', q: 'The scraper dies halfway through the night. Now what?', a: 'You run it again. RAW stays untouched, cleaning writes to a separate layer, and nothing is duplicated.' },
+        querypilot: { ctx: 'Personal project · on GitHub', q: 'Can a model write SQL and still only read?', a: 'Yes, if two separate walls stand between the model and the data. Try to get a query past both.' },
+      },
+    },
+    fr: {
+      role: 'Étudiant ingénieur Data & IA · ESILV, Paris',
+      title: 'Je conçois des outils d’IA qui demandent avant d’agir.',
+      avail: 'Disponible pour un stage de 6' + NB + 'mois dès février 2027',
+      req: 'Supprime les trois dernières réceptions.',
+      checks: ['Compris', 'Preuves', 'Autorisé'],
+      refused: 'Refusé',
+      reply: 'Supprimer n’est pas une opération qu’il possède. Il propose un retour fournisseur.',
+      read: 'Lire l’histoire',
+      stories: {
+        essor: { ctx: 'B-AGILE · stage, 2026', q: 'Pourquoi l’assistant ne pouvait-il pas écrire son propre SQL' + NB + '?', a: 'Parce qu’un modèle qui écrit du SQL peut écrire le mauvais SQL. Le modèle choisit une opération dans une courte liste, et le code écrit la requête.' },
+        aiops: { ctx: 'Société Générale ABS · stage, 2025', q: 'Une API ralentit à 14' + NB + 'h' + NB + '02. Que doit voir l’ingénieur en premier' + NB + '?', a: 'Un signalement avec sa raison, et l’étape de runbook qui correspond. Rejouez un incident fictif.' },
+        pipeline: { ctx: 'Projet ESILV avec Red Alert Labs · 2025', q: 'Le scraper plante au milieu de la nuit. Et maintenant' + NB + '?', a: 'On relance. RAW reste intact, le nettoyage écrit dans une couche séparée, et rien n’est dupliqué.' },
+        querypilot: { ctx: 'Projet personnel · sur GitHub', q: 'Un modèle peut-il écrire du SQL sans rien pouvoir modifier' + NB + '?', a: 'Oui, si deux murs indépendants séparent le modèle des données. Essayez de faire passer une requête.' },
+      },
+    },
+  };
+
+  const q = new URLSearchParams(location.search);
+  const l = q.get('l') === 'fr' ? 'fr' : 'en';
+  const p = ['essor', 'aiops', 'pipeline', 'querypilot'].includes(q.get('p')) ? q.get('p') : 'home';
+  const d = data[l];
+  const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  document.documentElement.lang = l;
+
+  if (p === 'home') {
+    document.body.className = 'home';
+    document.body.innerHTML = `
+      <div class="who"><img src="../src/assets/portrait.jpg" alt="" /><div><b>Omar Bari</b><span>${esc(d.role)}</span></div></div>
+      <h1>${esc(d.title)}</h1>
+      <div class="card">
+        <p class="req">${esc(d.req)}</p>
+        <p class="checks"><span class="ok">${esc(d.checks[0])}</span><span class="ok">${esc(d.checks[1])}</span><span class="no">${esc(d.checks[2])}</span></p>
+        <p class="out"><b>${esc(d.refused)}</b><span>${esc(d.reply)}</span></p>
+      </div>
+      <div class="foot"><span class="avail"><i></i>${esc(d.avail)}</span></div>`;
+  } else {
+    const s = d.stories[p];
+    document.body.className = 'story';
+    document.body.innerHTML = `
+      <p class="brand">Omar Bari</p>
+      <p class="ctx">${esc(s.ctx)}</p>
+      <h1>${esc(s.q)}</h1>
+      <p class="answer">${esc(s.a)}</p>
+      <div class="foot"><span class="avail"><i></i>${esc(d.avail)}</span><span class="go">${esc(d.read)} →</span></div>`;
+    // fit: shrink the question until the answer clears the footer
+    const h1 = document.querySelector('h1');
+    const ans = document.querySelector('.answer');
+    const foot = document.querySelector('.foot');
+    let size = 76;
+    const place = () => {
+      h1.style.fontSize = size + 'px';
+      ans.style.top = h1.getBoundingClientRect().bottom + 28 + 'px';
+    };
+    place();
+    while (ans.getBoundingClientRect().bottom > foot.getBoundingClientRect().top - 28 && size > 52) {
+      size -= 4;
+      place();
+    }
+  }
+</script>
+</body>
+</html>

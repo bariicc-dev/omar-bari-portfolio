@@ -1,0 +1,83 @@
+---
+interface Props {
+  label?: string;
+  paths: { label: string; nodes: string[] }[];
+  note?: string;
+}
+const { label, paths, note } = Astro.props;
+---
+
+<figure class="flow">
+  {label && <figcaption class="flow-cap">{label}</figcaption>}
+  {
+    paths.map((p) => (
+      <div class="flow-path">
+        <p class="flow-label">{p.label}</p>
+        <ol class="flow-nodes">
+          {p.nodes.map((n) => (
+            <li>
+              <span>{n}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    ))
+  }
+  {note && <p class="flow-note">{note}</p>}
+</figure>
+
+<style>
+  .flow {
+    margin: 0;
+    padding: clamp(1rem, 2.4vw, 1.4rem);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+  }
+  .flow-cap {
+    font-size: 0.8125rem;
+    font-weight: 580;
+    color: var(--text-3);
+  }
+  .flow-path + .flow-path {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--line-2);
+  }
+  .flow-label {
+    margin-bottom: 0.6rem;
+    font-weight: 640;
+  }
+  .flow-nodes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .flow-nodes li {
+    display: inline-flex;
+    align-items: center;
+  }
+  .flow-nodes li + li::before {
+    content: '→';
+    margin: 0 0.45rem;
+    color: var(--text-3);
+  }
+  .flow-nodes span {
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    background: var(--surface-2);
+    font-size: 0.88rem;
+    line-height: 1.3;
+  }
+  .flow-note {
+    margin-top: 1.1rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--accent);
+    font-weight: 560;
+  }
+</style>

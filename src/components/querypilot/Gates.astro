@@ -1,0 +1,320 @@
+---
+/**
+ * Pick a generated query, see where it stops. One radio group; CSS :has()
+ * shows the matching path, so it works with the keyboard and without JS.
+ */
+import { gates } from '../../data/stories/querypilot';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const g = gates[lang];
+const id = (s: string) => `gt-${lang}-${s}`;
+type St = 'pass' | 'stop' | 'also' | 'skip';
+const stateOf = (walls: number[], i: number): St => {
+  if (!walls.length) return 'pass';
+  const first = Math.min(...walls);
+  if (i < first) return 'pass';
+  if (i === first) return 'stop';
+  return walls.includes(i) ? 'also' : 'skip';
+};
+const qs = g.queries;
+const css = qs
+  .map((q) => `.gt:has(#${id(q.id)}:checked) .gt-path[data-q='${q.id}']{display:block}`)
+  .join('\n');
+---
+
+<div class="gt">
+  <p class="gt-note">{g.note}</p>
+  <div class="gt-grid">
+    <fieldset class="gt-pick">
+      <legend class="label">{g.pick}</legend>
+      <div class="gt-list">
+        {
+          qs.map((q, i) => (
+            <>
+              <input class="sr gt-in" type="radio" name={id('q')} id={id(q.id)} value={q.id} checked={i === 2} />
+              <label class="gt-q" for={id(q.id)}>
+                <code>{q.sql}</code>
+              </label>
+            </>
+          ))
+        }
+      </div>
+    </fieldset>
+
+    <div class="gt-stage">
+      {
+        qs.map((q) => {
+          const reached = q.walls.length === 0;
+          return (
+            <div class="gt-path" data-q={q.id}>
+              <p class="gt-sql">
+                <code>{q.sql}</code>
+              </p>
+              <ol class="gt-gates">
+                {g.gates.map((gate, i) => {
+                  const st = stateOf(q.walls, i);
+                  return (
+                    <li class={`gt-gate is-${st}`}>
+                      <span class="gt-mark" aria-hidden="true" />
+                      <span class="gt-name">{gate.name}</span>
+                      <span class="gt-line">{gate.line}</span>
+                      {st === 'stop' && <span class="gt-flag">{g.stopped}</span>}
+                      {st === 'also' && <span class="gt-flag gt-flag--also">{g.also}</span>}
+                    </li>
+                  );
+                })}
+                <li class={`gt-gate gt-data ${reached ? 'is-pass' : 'is-skip'}`}>
+                  <span class="gt-mark" aria-hidden="true" />
+                  <span class="gt-name">{g.data}</span>
+                  {reached && <span class="gt-flag gt-flag--ok">{g.runs}</span>}
+                </li>
+              </ol>
+              <p class={`gt-result ${reached ? 'is-ok' : 'is-no'}`}>{q.result}</p>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+</div>
+
+<style set:html={css}></style>
+
+<style>
+  .gt {
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    border: 1px solid var(--line-2);
+    border-radius: 22px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  }
+  .gt-note {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.92rem;
+    color: var(--text-2);
+  }
+  .gt-note::before {
+    content: '';
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ask);
+  }
+  .gt-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 1.4rem;
+    align-items: start;
+  }
+  .gt-pick {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .gt-pick legend {
+    margin-bottom: 0.5rem;
+    padding: 0;
+  }
+  .gt-list {
+    display: grid;
+    gap: 0.4rem;
+  }
+  .gt-q {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--line-2);
+    border-radius: 11px;
+    background: var(--bg-2);
+    cursor: pointer;
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease;
+  }
+  .gt-q:hover {
+    border-color: var(--line-3);
+  }
+  .gt-in:checked + .gt-q {
+    border-color: var(--text-2);
+    background: var(--surface-3);
+  }
+  .gt-in:focus-visible + .gt-q {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  code {
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.78rem;
+    overflow-wrap: anywhere;
+  }
+
+  .gt-path {
+    display: none;
+    animation: gt-in 0.35s var(--ease-out);
+  }
+  @keyframes gt-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .gt-sql {
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: #060910;
+  }
+  .gt-gates {
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .gt-gate {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    column-gap: 0.7rem;
+    align-items: start;
+    padding: 0.75rem 0;
+  }
+  .gt-gate::before {
+    content: '';
+    position: absolute;
+    left: calc(0.8rem - 1px);
+    top: -0.4rem;
+    height: 1.1rem;
+    width: 2px;
+    background: var(--line-2);
+  }
+  .gt-gate.is-pass::before,
+  .gt-gate.is-stop::before {
+    background: var(--text-2);
+  }
+  .gt-mark {
+    grid-row: 1 / 3;
+    position: relative;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-3);
+    background: var(--bg-2);
+  }
+  .is-pass .gt-mark {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .is-pass .gt-mark::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 4px;
+    width: 5px;
+    height: 10px;
+    border: solid var(--accent-ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .is-stop .gt-mark {
+    border-color: var(--stop);
+    background: var(--stop);
+  }
+  .is-stop .gt-mark::before,
+  .is-stop .gt-mark::after,
+  .is-also .gt-mark::before,
+  .is-also .gt-mark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 11px;
+    width: 11px;
+    height: 2px;
+    background: #2a0703;
+    transform: rotate(45deg);
+  }
+  .is-stop .gt-mark::after,
+  .is-also .gt-mark::after {
+    transform: rotate(-45deg);
+  }
+  .is-also .gt-mark {
+    border-color: var(--stop);
+    border-style: dashed;
+  }
+  .is-also .gt-mark::before,
+  .is-also .gt-mark::after {
+    background: var(--stop);
+  }
+  .gt-name {
+    font-weight: 640;
+    line-height: 1.3;
+  }
+  .gt-line {
+    grid-column: 2;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    color: var(--text-2);
+  }
+  .is-skip .gt-name,
+  .is-skip .gt-line {
+    opacity: 0.4;
+  }
+  .gt-flag {
+    grid-column: 3;
+    grid-row: 1;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: var(--stop-soft);
+    color: var(--stop);
+    font-size: 0.75rem;
+    font-weight: 640;
+    white-space: nowrap;
+  }
+  .gt-flag--also {
+    background: transparent;
+    border: 1px dashed rgba(255, 122, 110, 0.55);
+  }
+  .gt-flag--ok {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .gt-result {
+    margin-top: 0.6rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    font-weight: 580;
+    line-height: 1.45;
+  }
+  .gt-result.is-ok {
+    background: var(--accent-soft);
+  }
+  .gt-result.is-no {
+    background: var(--stop-soft);
+  }
+  @media (max-width: 860px) {
+    .gt-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @media (max-width: 480px) {
+    .gt-gate {
+      grid-template-columns: 1.6rem minmax(0, 1fr);
+    }
+    .gt-flag {
+      grid-column: 2;
+      grid-row: auto;
+      justify-self: start;
+      margin-top: 0.35rem;
+    }
+  }
+</style>

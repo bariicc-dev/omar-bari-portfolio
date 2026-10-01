@@ -1,0 +1,59 @@
+---
+/** The two walls, drawn: a read runs, a write is stopped twice. */
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = {
+  en: { runs: 'runs', blocked: 'blocked twice' },
+  fr: { runs: 'exécutée', blocked: 'bloquée deux fois' },
+}[lang];
+---
+
+<div class="art art-query">
+  <p class="q"><code>SELECT … FROM orders</code><span class="pill pill--ok">{t.runs}</span></p>
+  <p class="q"><code>DELETE FROM orders</code><span class="pill pill--no">{t.blocked}</span></p>
+</div>
+
+<style>
+  .art-query {
+    display: grid;
+    align-content: center;
+    gap: 0.45rem;
+  }
+  .q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  code {
+    font-family: var(--mono);
+    font-stretch: 75%;
+    font-size: 0.74rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pill {
+    flex: none;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 640;
+  }
+  .pill--ok {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .pill--no {
+    background: var(--stop-soft);
+    color: var(--stop);
+  }
+</style>

@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import Story from '../../components/story/Story.astro';
+import Gates from '../../components/querypilot/Gates.astro';
+import { QUERYPILOT_REPO } from '../../data/site';
+import { stories } from '../../data/stories';
+
+const m = stories.querypilot.en.meta;
+---
+
+<Base lang="en" title={m.title} description={m.description} path="/work/querypilot/" altPath="/fr/work/querypilot/" og="/og/querypilot-en.png">
+  <Story lang="en" slug="querypilot" repo={QUERYPILOT_REPO}>
+    <Gates lang="en" />
+  </Story>
+</Base>

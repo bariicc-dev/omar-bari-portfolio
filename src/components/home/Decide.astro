@@ -1,0 +1,763 @@
+---
+/**
+ * The first discovery: ask Essor something and see which way it goes.
+ * Three requests, three outcomes (answer, ask first, refuse). The result is
+ * rendered in the HTML; JavaScript only decides which one is visible and
+ * plays the three checks. Without JavaScript all three results are listed.
+ */
+import Nb from '../Nb.astro';
+import { decide, type Kind } from '../../data/decide';
+import { ui, type Lang } from '../../data/ui';
+import { storyHref } from '../../data/stories';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const d = decide[lang];
+const sim = ui[lang].sim;
+const exitOrder: Kind[] = ['answer', 'confirm', 'refuse'];
+const more = storyHref(lang, 'essor');
+---
+
+<div class="dc" data-decide>
+  <div class="dc-bar">
+    <p class="dc-app">
+      <span class="dc-logo" aria-hidden="true"></span>
+      <strong>{d.app}</strong>
+      <span class="dc-sub">{d.sub}</span>
+    </p>
+    <p class="tag dc-sim">{sim}</p>
+  </div>
+
+  <div class="dc-body">
+    <p class="dc-ask label" id={`dc-ask-${lang}`}>{d.ask}</p>
+    <div class="dc-reqs" role="group" aria-labelledby={`dc-ask-${lang}`}>
+      {
+        d.requests.map((r) => (
+          <button type="button" class="dc-req" data-req={r.id} aria-pressed="false" aria-controls={`dc-out-${lang}`}>
+            <span class="dc-req-text"><Nb text={r.text} /></span>
+            <svg class="dc-req-go" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.6" />
+            </svg>
+          </button>
+        ))
+      }
+    </div>
+
+    <ul class="dc-exits" aria-label={d.exitsLabel}>
+      {
+        exitOrder.map((k) => (
+          <li class="dc-exit" data-exit={k}>
+            <span class="dc-ico" aria-hidden="true">
+              {k === 'answer' && (
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="M4 4.5h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-3.5 3v-3H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M7 8.2h6M7 10.8h4" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              )}
+              {k === 'confirm' && (
+                <svg viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M10 6.2v4.3l2.6 1.6" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              )}
+              {k === 'refuse' && (
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="M7.1 3h5.8L17 7.1v5.8L12.9 17H7.1L3 12.9V7.1L7.1 3Z" stroke="currentColor" stroke-width="1.5" />
+                  <path d="m7.5 7.5 5 5m0-5-5 5" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              )}
+            </span>
+            <span class="dc-exit-title">{d.exits[k].title}</span>
+            <span class="dc-exit-line">{d.exits[k].line}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="dc-out" id={`dc-out-${lang}`} data-state="idle">
+      <p class="dc-idle needs-js">{d.idle}</p>
+      {
+        d.requests.map((r) => (
+          <div class="dc-result" data-result={r.id}>
+            <p class="dc-echo">
+              <span class="label">{d.ask}</span> {r.text}
+            </p>
+            <ol class="dc-checks">
+              {r.checks.map((c) => (
+                <li class="dc-check" data-state={c.state} data-final={c.state}>
+                  <span class="dc-mark" aria-hidden="true" />
+                  <span class="dc-check-label">{c.label}</span>
+                  <span class="dc-check-note"><Nb text={c.note} /></span>
+                </li>
+              ))}
+            </ol>
+            <div class="dc-card">
+              <p class="dc-status">{r.status}</p>
+              {r.reply && (
+                <p class="dc-reply">
+                  <Nb text={r.reply} />
+                </p>
+              )}
+              {r.sources && (
+                <ol class="dc-sources">
+                  {r.sources.map((s, i) => (
+                    <li>
+                      <span class="dc-src-n">{i + 1}</span>
+                      {s}
+                    </li>
+                  ))}
+                </ol>
+              )}
+              {r.rows && (
+                <div class="dc-preview" data-phase="preview">
+                  <table class="dc-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          <span class="sr">{r.status}</span>
+                        </th>
+                        <th scope="col">{d.before}</th>
+                        <th scope="col">{d.after}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {r.rows.map(([k, a, b]) => (
+                        <tr>
+                          <th scope="row">{k}</th>
+                          <td>{a}</td>
+                          <td class="dc-after">{b}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div class="dc-ph dc-ph-preview needs-js">
+                    <button type="button" class="btn btn--accent dc-btn" data-act="confirm">
+                      {d.confirm}
+                    </button>
+                    <button type="button" class="btn btn--ghost dc-btn" data-act="cancel">
+                      {d.cancel}
+                    </button>
+                  </div>
+                  <div class="dc-ph dc-ph-saved">
+                    <p class="dc-msg dc-msg--ok">{d.saved}</p>
+                    <button type="button" class="btn btn--ghost dc-btn" data-act="again">
+                      {d.again}
+                    </button>
+                  </div>
+                  <div class="dc-ph dc-ph-resent">
+                    <p class="dc-msg">{d.resent}</p>
+                    <button type="button" class="btn btn--ghost dc-btn" data-act="restart">
+                      {d.restart}
+                    </button>
+                  </div>
+                  <div class="dc-ph dc-ph-cancelled">
+                    <p class="dc-msg">{d.cancelled}</p>
+                    <button type="button" class="btn btn--ghost dc-btn" data-act="restart">
+                      {d.restart}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            <p class="dc-why">
+              <span class="dc-why-k">{d.whyLabel}</span> <Nb text={r.why} />
+            </p>
+            <a class="go dc-more" href={more}>
+              {d.more}
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.6" />
+              </svg>
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <p class="sr" aria-live="polite" data-live></p>
+</div>
+
+<style>
+  .dc {
+    position: relative;
+    border: 1px solid var(--line-2);
+    border-radius: 22px;
+    background: linear-gradient(180deg, #111a2a 0%, #0c1320 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 40px 80px -40px rgba(0, 0, 0, 0.8),
+      0 0 0 1px rgba(0, 0, 0, 0.4);
+  }
+  .dc::before {
+    content: '';
+    position: absolute;
+    top: -90px;
+    left: 10%;
+    right: -40px;
+    height: 320px;
+    z-index: -1;
+    background: radial-gradient(closest-side, rgba(200, 242, 80, 0.11), transparent);
+    pointer-events: none;
+  }
+  .dc-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.85rem 1.1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .dc-app {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.55rem;
+    font-size: 0.92rem;
+  }
+  .dc-app strong {
+    font-weight: 660;
+    font-stretch: 108%;
+  }
+  .dc-logo {
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    background:
+      radial-gradient(circle at 30% 30%, var(--accent-hi), var(--accent) 60%, #8fb52a);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3) inset;
+  }
+  .dc-sub {
+    color: var(--text-3);
+  }
+  .dc-body {
+    padding: 1rem 1.1rem 1.2rem;
+  }
+  .dc-ask {
+    margin-bottom: 0.55rem;
+  }
+
+  /* requests */
+  .dc-reqs {
+    display: grid;
+    gap: 0.45rem;
+  }
+  .dc-req {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+    min-height: 2.9rem;
+    padding: 0.62rem 0.9rem;
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+    background: var(--surface-2);
+    text-align: left;
+    font-size: 0.97rem;
+    font-weight: 520;
+    line-height: 1.35;
+    transition:
+      border-color 0.18s ease,
+      background 0.18s ease,
+      transform 0.12s var(--ease);
+  }
+  .dc-req:hover {
+    border-color: var(--line-3);
+    background: var(--surface-3);
+  }
+  .dc-req:active {
+    transform: translateY(1px);
+  }
+  .dc-req[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: linear-gradient(90deg, rgba(200, 242, 80, 0.1), rgba(200, 242, 80, 0.03));
+  }
+  .dc-req-go {
+    flex: none;
+    color: var(--text-3);
+    transition:
+      transform 0.2s var(--ease),
+      color 0.2s ease;
+  }
+  .dc-req:hover .dc-req-go,
+  .dc-req[aria-pressed='true'] .dc-req-go {
+    color: var(--accent);
+    transform: translateX(2px);
+  }
+
+  /* the three ways a request can go */
+  .dc-exits {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin: 0.9rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .dc-exit {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.5rem;
+    align-items: start;
+    padding: 0.65rem 0.7rem;
+    border: 1px dashed var(--line-2);
+    border-radius: 12px;
+    transition:
+      opacity 0.3s ease,
+      border-color 0.3s ease,
+      background 0.3s ease;
+  }
+  .dc-exit[data-exit='answer'] {
+    --tone: var(--accent);
+    --tone-soft: var(--accent-soft);
+  }
+  .dc-exit[data-exit='confirm'] {
+    --tone: var(--ask);
+    --tone-soft: var(--ask-soft);
+  }
+  .dc-exit[data-exit='refuse'] {
+    --tone: var(--stop);
+    --tone-soft: var(--stop-soft);
+  }
+  .dc-ico {
+    grid-row: 1 / 3;
+    width: 20px;
+    height: 20px;
+    margin-top: 0.05rem;
+    color: var(--tone);
+  }
+  .dc-exit-title {
+    font-size: 0.9rem;
+    font-weight: 620;
+    line-height: 1.25;
+  }
+  .dc-exit-line {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: var(--text-2);
+  }
+  .dc[data-lit] .dc-exit {
+    opacity: 0.38;
+  }
+  .dc[data-lit='answer'] .dc-exit[data-exit='answer'],
+  .dc[data-lit='confirm'] .dc-exit[data-exit='confirm'],
+  .dc[data-lit='refuse'] .dc-exit[data-exit='refuse'] {
+    opacity: 1;
+    border-style: solid;
+    border-color: var(--tone);
+    background: var(--tone-soft);
+  }
+
+  /* result */
+  .dc-out {
+    margin-top: 0.9rem;
+  }
+  .dc-idle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px dashed var(--line-2);
+    border-radius: 12px;
+    font-size: 0.93rem;
+    color: var(--text-2);
+  }
+  .dc-idle::before {
+    content: '';
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .dc-out[data-state='result'] .dc-idle {
+    display: none;
+  }
+  .js-ready .dc-result[hidden] {
+    display: none;
+  }
+  .dc-result + .dc-result {
+    margin-top: 1.4rem;
+  }
+  .dc-echo {
+    display: none;
+  }
+  .dc-checks {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .dc-check {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 0.45rem;
+    align-items: center;
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+  .dc-mark {
+    grid-row: 1 / 3;
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line-3);
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .dc-check[data-state='run'] .dc-mark {
+    border-color: var(--text-2);
+    animation: dc-pulse 0.5s ease infinite;
+  }
+  @keyframes dc-pulse {
+    50% {
+      box-shadow: 0 0 0 4px rgba(182, 191, 208, 0.18);
+    }
+  }
+  .dc-check[data-state='pass'] .dc-mark {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .dc-check[data-state='pass'] .dc-mark::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--accent-ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .dc-check[data-state='fail'] .dc-mark {
+    border-color: var(--stop);
+    background: var(--stop);
+  }
+  .dc-check[data-state='fail'] .dc-mark::before,
+  .dc-check[data-state='fail'] .dc-mark::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 7px;
+    width: 9px;
+    height: 2px;
+    background: #2a0703;
+    transform: rotate(45deg);
+  }
+  .dc-check[data-state='fail'] .dc-mark::after {
+    transform: rotate(-45deg);
+  }
+  .dc-check-label {
+    font-weight: 620;
+  }
+  .dc-check-note {
+    color: var(--text-2);
+  }
+  .dc-check[data-state='idle'] .dc-check-label,
+  .dc-check[data-state='idle'] .dc-check-note,
+  .dc-check[data-state='run'] .dc-check-note {
+    opacity: 0.35;
+  }
+  .dc-check[data-state='fail'] .dc-check-label {
+    color: var(--stop);
+  }
+
+  .dc-card {
+    margin-top: 0.85rem;
+    padding: 0.95rem 1rem 1rem;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--tone, var(--line-3));
+    background: rgba(255, 255, 255, 0.025);
+  }
+  .dc-result[data-result='answer'] {
+    --tone: var(--accent);
+  }
+  .dc-result[data-result='confirm'] {
+    --tone: var(--ask);
+  }
+  .dc-result[data-result='refuse'] {
+    --tone: var(--stop);
+  }
+  .dc-status {
+    font-size: 1.12rem;
+    font-stretch: 106%;
+    font-weight: 660;
+    letter-spacing: -0.01em;
+    color: var(--tone);
+  }
+  .dc-reply {
+    margin-top: 0.35rem;
+    font-size: 0.97rem;
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+  .dc-sources {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .dc-sources li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.86rem;
+    color: var(--text-2);
+  }
+  .dc-src-n {
+    display: inline-grid;
+    place-items: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+  .dc-table {
+    width: 100%;
+    margin-top: 0.55rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .dc-table th,
+  .dc-table td {
+    padding: 0.42rem 0.5rem 0.42rem 0;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    font-weight: 500;
+  }
+  .dc-table thead th {
+    padding-top: 0;
+    font-size: 0.75rem;
+    font-weight: 580;
+    color: var(--text-3);
+  }
+  .dc-table td {
+    font-family: var(--mono);
+    font-stretch: 87.5%;
+    font-size: 0.82rem;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .dc-table .dc-after {
+    color: var(--accent);
+  }
+  .dc-ph {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.8rem;
+    margin-top: 0.8rem;
+  }
+  .dc-preview[data-phase='preview'] .dc-ph-preview,
+  .dc-preview[data-phase='saved'] .dc-ph-saved,
+  .dc-preview[data-phase='resent'] .dc-ph-resent,
+  .dc-preview[data-phase='cancelled'] .dc-ph-cancelled {
+    display: flex;
+  }
+  .dc-btn {
+    min-height: 2.6rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.92rem;
+  }
+  .dc-msg {
+    font-size: 0.93rem;
+    font-weight: 560;
+  }
+  .dc-msg--ok {
+    color: var(--accent);
+  }
+  .dc-why {
+    margin-top: 0.8rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-2);
+    text-wrap: pretty;
+  }
+  .dc-why-k {
+    margin-right: 0.3rem;
+    font-weight: 660;
+    color: var(--text);
+  }
+  .dc-more {
+    margin-top: 0.7rem;
+    font-size: 0.95rem;
+  }
+
+  /* reveal: the card and the why appear after the checks */
+  .dc-result.is-playing .dc-card,
+  .dc-result.is-playing .dc-why,
+  .dc-result.is-playing .dc-more {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  .dc-card,
+  .dc-why,
+  .dc-more {
+    transition:
+      opacity 0.35s var(--ease-out),
+      transform 0.35s var(--ease-out);
+  }
+
+  @media (max-width: 560px) {
+    .dc-bar,
+    .dc-body {
+      padding-inline: 0.85rem;
+    }
+    .dc-exits {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.35rem;
+    }
+    .dc-exit {
+      grid-template-columns: auto auto minmax(0, 1fr);
+      align-items: baseline;
+      padding: 0.5rem 0.7rem;
+    }
+    .dc-ico {
+      grid-row: auto;
+      align-self: center;
+    }
+    .dc-checks {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.35rem;
+    }
+    .dc-mark {
+      grid-row: auto;
+    }
+    .dc-check {
+      grid-template-columns: auto auto minmax(0, 1fr);
+      column-gap: 0.45rem;
+    }
+  }
+</style>
+
+<noscript>
+  <style>
+    .dc-echo {
+      display: block !important;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+    }
+  </style>
+</noscript>
+
+<script>
+  type Phase = 'preview' | 'saved' | 'resent' | 'cancelled';
+  // Under reduced motion the checks and the result appear at once.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const STEP = 190;
+
+  document.querySelectorAll<HTMLElement>('[data-decide]').forEach((root) => {
+    const reqs = [...root.querySelectorAll<HTMLButtonElement>('.dc-req')];
+    const out = root.querySelector<HTMLElement>('.dc-out');
+    const live = root.querySelector<HTMLElement>('[data-live]');
+    const results = new Map([...root.querySelectorAll<HTMLElement>('.dc-result')].map((el) => [el.dataset.result ?? '', el]));
+    let timers: number[] = [];
+
+    // With JS, show one result at a time.
+    root.classList.add('js-ready');
+    results.forEach((el) => (el.hidden = true));
+
+    const clear = () => {
+      timers.forEach((t) => window.clearTimeout(t));
+      timers = [];
+    };
+    const say = (text: string) => {
+      if (live) live.textContent = text;
+    };
+    const announce = (el: HTMLElement) => {
+      const parts = [el.querySelector('.dc-status'), el.querySelector('.dc-reply'), el.querySelector('.dc-why')]
+        .map((n) => n?.textContent?.replace(/\s+/g, ' ').trim())
+        .filter(Boolean);
+      say(parts.join('. '));
+    };
+
+    const pick = (id: string) => {
+      const el = results.get(id);
+      if (!el || !out) return;
+      clear();
+      reqs.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.req === id)));
+      out.dataset.state = 'result';
+      results.forEach((r, rid) => (r.hidden = rid !== id));
+      const preview = el.querySelector<HTMLElement>('.dc-preview');
+      if (preview) preview.dataset.phase = 'preview';
+      const checks = [...el.querySelectorAll<HTMLElement>('.dc-check')];
+      delete root.dataset.lit;
+
+      const finish = () => {
+        root.dataset.lit = id;
+        el.classList.remove('is-playing');
+        announce(el);
+      };
+      if (reduce) {
+        checks.forEach((c) => (c.dataset.state = c.dataset.final ?? 'pass'));
+        finish();
+        return;
+      }
+      el.classList.add('is-playing');
+      checks.forEach((c) => (c.dataset.state = 'idle'));
+      checks.forEach((c, i) => {
+        timers.push(window.setTimeout(() => (c.dataset.state = 'run'), i * STEP));
+        timers.push(window.setTimeout(() => (c.dataset.state = c.dataset.final ?? 'pass'), i * STEP + STEP * 0.75));
+      });
+      timers.push(window.setTimeout(finish, checks.length * STEP + 60));
+    };
+
+    const setPhase = (preview: HTMLElement, phase: Phase) => {
+      preview.dataset.phase = phase;
+      const panel = preview.querySelector<HTMLElement>(`.dc-ph-${phase}`);
+      panel?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true });
+      const msg = panel?.querySelector('.dc-msg')?.textContent?.trim();
+      if (msg) say(msg);
+    };
+
+    root.addEventListener('click', (e) => {
+      const b = (e.target as Element | null)?.closest<HTMLButtonElement>('button');
+      if (!b || !root.contains(b)) return;
+      if (b.dataset.req) {
+        pick(b.dataset.req);
+        return;
+      }
+      const preview = b.closest<HTMLElement>('.dc-preview');
+      if (!preview) return;
+      const act = b.dataset.act;
+      if (act === 'confirm') setPhase(preview, 'saved');
+      if (act === 'cancel') setPhase(preview, 'cancelled');
+      if (act === 'again') setPhase(preview, 'resent');
+      if (act === 'restart') {
+        const id = preview.closest<HTMLElement>('.dc-result')?.dataset.result;
+        if (id) {
+          pick(id);
+          root.querySelector<HTMLButtonElement>(`.dc-req[data-req="${id}"]`)?.focus({ preventScroll: true });
+        }
+      }
+    });
+
+    // Anything on the page with data-pick (the hero button) runs that request here.
+    document.addEventListener('click', (e) => {
+      const a = (e.target as Element | null)?.closest<HTMLElement>('[data-pick]');
+      if (!a || root.contains(a)) return;
+      e.preventDefault();
+      const id = a.dataset.pick ?? '';
+      const box = root.getBoundingClientRect();
+      if (box.top < 0 || box.top > innerHeight * 0.45) {
+        root.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      }
+      pick(id);
+      root.querySelector<HTMLButtonElement>(`.dc-req[data-req="${id}"]`)?.focus({ preventScroll: true });
+    });
+  });
+</script>

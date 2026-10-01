@@ -1,0 +1,144 @@
+---
+/** A homepage entry: the drawing first, then the question it answers. The whole card links to the story. */
+import Nb from '../Nb.astro';
+import ArtEssor from '../art/ArtEssor.astro';
+import ArtAiops from '../art/ArtAiops.astro';
+import ArtPipeline from '../art/ArtPipeline.astro';
+import ArtQuery from '../art/ArtQuery.astro';
+import { stories, storyHref } from '../../data/stories';
+import type { Slug } from '../../data/stories/types';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+  slug: Slug;
+  small?: boolean;
+}
+const { lang, slug, small = false } = Astro.props;
+const s = stories[slug][lang];
+---
+
+<a class:list={['tile', `tile--${slug}`, { 'tile--small': small }]} href={storyHref(lang, slug)}>
+  <div class="tile-art" aria-hidden="true">
+    {slug === 'essor' && <ArtEssor lang={lang} />}
+    {slug === 'aiops' && <ArtAiops lang={lang} />}
+    {slug === 'pipeline' && <ArtPipeline lang={lang} />}
+    {slug === 'querypilot' && <ArtQuery lang={lang} />}
+  </div>
+  <div class="tile-text">
+    <p class="tile-ctx"><Nb text={s.tile.ctx} /></p>
+    <h3 class="tile-q"><span style={`view-transition-name: q-${slug}`}>{s.question}</span></h3>
+    <span class="tile-go">
+      {s.tile.cta}
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M2 8h11M9 3.5 13.5 8 9 12.5" stroke="currentColor" stroke-width="1.7"></path>
+      </svg>
+    </span>
+  </div>
+</a>
+
+<style>
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    height: 100%;
+    padding: 0.8rem 0.8rem 1.25rem;
+    border: 1px solid var(--line-2);
+    border-radius: 22px;
+    background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+    text-decoration: none;
+    transition:
+      border-color 0.25s ease,
+      transform 0.25s var(--ease),
+      box-shadow 0.25s ease;
+  }
+  .tile:hover {
+    border-color: var(--line-3);
+    transform: translateY(-3px);
+    box-shadow: 0 30px 60px -40px rgba(0, 0, 0, 0.9);
+  }
+  .tile-art {
+    min-height: 14.75rem;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: var(--bg-2);
+    overflow: hidden;
+  }
+  .tile-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding-inline: 0.45rem;
+  }
+  .tile-ctx {
+    font-size: 0.8125rem;
+    font-weight: 560;
+    color: var(--text-3);
+  }
+  .tile-q {
+    margin-top: 0.45rem;
+    font-size: clamp(1.2rem, 1.05rem + 0.45vw, 1.42rem);
+    font-stretch: 106%;
+    font-weight: 630;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  .tile-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    font-size: 0.95rem;
+    font-weight: 620;
+    color: var(--accent);
+  }
+  .tile-go svg {
+    transition: transform 0.22s var(--ease);
+  }
+  .tile:hover .tile-go svg {
+    transform: translateX(3px);
+  }
+
+  .tile--small {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.8rem 0.8rem 0.8rem 1.4rem;
+  }
+  .tile--small .tile-art {
+    order: 2;
+    min-height: 0;
+  }
+  .tile--small .tile-text {
+    padding: 0.6rem 0;
+  }
+  @media (max-width: 999px) and (min-width: 640px) {
+    .tile:not(.tile--small) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 1.4rem;
+      padding: 0.8rem;
+    }
+    .tile:not(.tile--small) .tile-text {
+      padding: 0.6rem 0.6rem 0.6rem 0;
+    }
+  }
+  @media (max-width: 639px) {
+    .tile--small {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0.8rem 0.8rem 1.25rem;
+      gap: 1.1rem;
+    }
+    .tile--small .tile-art {
+      order: 0;
+    }
+    .tile--small .tile-text {
+      padding: 0 0.45rem;
+    }
+  }
+</style>

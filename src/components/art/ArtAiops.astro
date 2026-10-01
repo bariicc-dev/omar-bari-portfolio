@@ -1,0 +1,102 @@
+---
+/** The incident, drawn: a latency line, the spike, the flag, and the runbook it points to. */
+import { LATENCY, SCORE, THRESHOLD, START_MINUTE } from '../../data/aiopsSim';
+import type { Lang } from '../../data/ui';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = {
+  en: { cap: 'p95 latency of an API', flag: 'flagged', runbook: 'Runbook: slow API responses, step 2' },
+  fr: { cap: 'Latence p95 d’une API', flag: 'signalé', runbook: 'Runbook : API lente, étape 2' },
+}[lang];
+
+const W = 320;
+const H = 110;
+const N = LATENCY.length;
+const x = (i: number) => 6 + (i * (W - 12)) / (N - 1);
+const y = (v: number) => H - 8 - (v / 1000) * (H - 22);
+const d = LATENCY.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+const flagged = SCORE.map((s, i) => (s >= THRESHOLD ? i : -1)).filter((i) => i >= 0);
+const first = flagged[0];
+const time = (i: number) => {
+  const m = START_MINUTE + i;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+};
+---
+
+<div class="art art-aiops">
+  <p class="art-cap">{t.cap}</p>
+  <svg viewBox={`0 0 ${W} ${H}`} class="spark">
+    <line x1="0" x2={W} y1={y(250)} y2={y(250)} class="base" />
+    <rect x={x(first) - 8} y="4" width={x(flagged[flagged.length - 1]) - x(first) + 16} height={H - 8} rx="6" class="band" />
+    <path d={d} class="ln" />
+    {flagged.map((i) => <circle cx={x(i)} cy={y(LATENCY[i])} r="4" class="pt" />)}
+  </svg>
+  <div class="tags">
+    <p class="flag"><span class="flag-dot"></span>{t.flag} · {time(first)}</p>
+    <p class="rb">→ {t.runbook}</p>
+  </div>
+</div>
+
+<style>
+  .art-aiops {
+    position: relative;
+    background: radial-gradient(240px 160px at 72% 30%, rgba(255, 122, 110, 0.09), transparent 70%);
+  }
+  .spark {
+    width: 100%;
+    height: auto;
+    margin-top: 0.4rem;
+    overflow: visible;
+  }
+  .base {
+    stroke: var(--line-2);
+    stroke-dasharray: 3 4;
+  }
+  .band {
+    fill: var(--stop-soft);
+  }
+  .ln {
+    fill: none;
+    stroke: #d7deeb;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .pt {
+    fill: var(--stop);
+    stroke: var(--bg);
+    stroke-width: 2;
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.7rem;
+    margin-top: 0.6rem;
+  }
+  .flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: var(--stop-soft);
+    color: var(--stop);
+    font-size: 0.75rem;
+    font-weight: 620;
+  }
+  .flag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--stop);
+  }
+  .rb {
+    font-size: 0.84rem;
+    font-weight: 560;
+    color: var(--text);
+  }
+</style>
